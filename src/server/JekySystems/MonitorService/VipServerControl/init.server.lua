@@ -5,9 +5,9 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local ServerStorage      = game:GetService("ServerStorage")
 local ReplicatedStorage  = game:GetService("ReplicatedStorage")
  
-local VandraTitle   = require(ServerStorage:WaitForChild("VandraModules"):WaitForChild("VandraTitle"))
-local VandraConfig  = require(ServerStorage:WaitForChild("VandraModules"):WaitForChild("VandraConfig"))
-local VandraVipData = require(ServerStorage:WaitForChild("VandraModules"):WaitForChild("VandraVipData"))
+local VandraTitle   = require(ServerStorage:WaitForChild("JekyModules"):WaitForChild("VandraTitle"))
+local VandraConfig  = require(ServerStorage:WaitForChild("JekyModules"):WaitForChild("VandraConfig"))
+local VandraVipData = require(ServerStorage:WaitForChild("JekyModules"):WaitForChild("VandraVipData"))
  
 -- ============================================================
 -- CONFIG 

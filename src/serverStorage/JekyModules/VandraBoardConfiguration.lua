@@ -1,4 +1,4 @@
--- ServerStorage/VandraModules/VandraBoardConfiguration
+-- ServerStorage/JekyModules/VandraBoardConfiguration
 local VandraBoardConfiguration = {}
 
 -- FILTER UNTUK SUMMIT LEADERBOARD (Server & Global)

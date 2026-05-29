@@ -1,4 +1,4 @@
--- ServerStorage/VandraModules/VandraConfig
+-- ServerStorage/JekyModules/VandraConfig
  
 local VandraGlobalData = require(script.Parent:WaitForChild("VandraGlobalData"))
 local VandraConfig     = {}

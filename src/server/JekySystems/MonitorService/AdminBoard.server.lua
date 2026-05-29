@@ -1,11 +1,11 @@
 -- ServerScriptService / VandraAdminBoard
--- Requires: VandraTitle, VandraBoardConfiguration in ServerStorage/VandraModules
+-- Requires: VandraTitle, VandraBoardConfiguration in ServerStorage/JekyModules
 
 local Players           = game:GetService("Players")
 local ServerStorage     = game:GetService("ServerStorage")
 local HttpService       = game:GetService("HttpService")
 
-local Modules           = ServerStorage:WaitForChild("VandraModules")
+local Modules           = ServerStorage:WaitForChild("JekyModules")
 local VandraTitle       = require(Modules:WaitForChild("VandraTitle"))
 local BoardConfig       = require(Modules:WaitForChild("VandraBoardConfiguration"))
 

@@ -1,11 +1,11 @@
--- ServerStorage/VandraModules/VandraTitle
+-- ServerStorage/JekyModules/VandraTitle
 
 local VandraTitle = {}
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local PS = require(
-ReplicatedStorage:WaitForChild("VandraProfile"):WaitForChild("ProfileServiceVandra")
+ReplicatedStorage:WaitForChild("JekyProfile"):WaitForChild("ProfileServiceJeky")
 )
 
 -- ============================================================

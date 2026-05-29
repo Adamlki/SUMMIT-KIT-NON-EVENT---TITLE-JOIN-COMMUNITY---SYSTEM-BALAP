@@ -1,10 +1,10 @@
--- ServerStorage/VandraModules/VandraDataStore
+-- ServerStorage/JekyModules/VandraDataStore
 local DataStoreService  = game:GetService("DataStoreService")
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
  
 local PS = require(
-ReplicatedStorage:WaitForChild("VandraProfile"):WaitForChild("ProfileServiceVandra")
+ReplicatedStorage:WaitForChild("JekyProfile"):WaitForChild("ProfileServiceJeky")
 )
  
 local VandraDataStore = {}
@@ -70,7 +70,7 @@ function VandraDataStore:ForceUpdateSummit(userId, newTotal)
     else
         -- Player offline: update langsung ke DataStore
         task.spawn(function()
-            local store = DataStoreService:GetDataStore("VandraProfile_v1")
+            local store = DataStoreService:GetDataStore("JekyProfile_v1")
             pcall(function()
                 store:UpdateAsync("Player_" .. userId, function(old)
                     if not old then return nil end

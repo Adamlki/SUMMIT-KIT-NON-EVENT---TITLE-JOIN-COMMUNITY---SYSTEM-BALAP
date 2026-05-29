@@ -1,10 +1,10 @@
--- ServerStorage/VandraModules/VandraSpeedRunData
+-- ServerStorage/JekyModules/VandraSpeedRunData
  
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players           = game:GetService("Players")
  
 local PS = require(
-ReplicatedStorage:WaitForChild("VandraProfile"):WaitForChild("ProfileServiceVandra")
+ReplicatedStorage:WaitForChild("JekyProfile"):WaitForChild("ProfileServiceJeky")
 )
  
 local VandraSpeedRunData = {}

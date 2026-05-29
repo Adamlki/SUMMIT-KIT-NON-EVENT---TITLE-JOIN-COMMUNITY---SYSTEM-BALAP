@@ -1,6 +1,6 @@
--- ServerStorage/VandraModules/VandraVipData
+-- ServerStorage/JekyModules/VandraVipData
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local PS = require(ReplicatedStorage:WaitForChild("VandraProfile"):WaitForChild("ProfileServiceVandra"))
+local PS = require(ReplicatedStorage:WaitForChild("JekyProfile"):WaitForChild("ProfileServiceJeky"))
 local VandraVipData = {}
 function VandraVipData:Load(userId)           return PS.Vip.Load(userId)           end
 function VandraVipData:Save(userId, isVip)          PS.Vip.Save(userId, isVip)            end

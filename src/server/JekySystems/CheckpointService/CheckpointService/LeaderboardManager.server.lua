@@ -6,9 +6,9 @@ local ServerStorage     = game:GetService("ServerStorage")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService        = game:GetService("RunService")
 
-local VandraTitle              = require(ServerStorage.VandraModules:WaitForChild("VandraTitle"))
-local VandraBoardConfiguration = require(ServerStorage.VandraModules:WaitForChild("VandraBoardConfiguration"))
-local PS = require(ReplicatedStorage:WaitForChild("VandraProfile"):WaitForChild("ProfileServiceVandra"))
+local VandraTitle              = require(ServerStorage.JekyModules:WaitForChild("VandraTitle"))
+local VandraBoardConfiguration = require(ServerStorage.JekyModules:WaitForChild("VandraBoardConfiguration"))
+local PS = require(ReplicatedStorage:WaitForChild("JekyProfile"):WaitForChild("ProfileServiceJeky"))
 
 local CONFIG = {
 MAX_ENTRIES          = 10,

@@ -4,11 +4,11 @@ local ServerStorage     = game:GetService("ServerStorage")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService        = game:GetService("RunService")
 
-local VandraSpeedRunData       = require(ServerStorage.VandraModules:WaitForChild("VandraSpeedRunData"))
-local VandraConfig             = require(ServerStorage.VandraModules:WaitForChild("VandraConfig"))
-local VandraTitle              = require(ServerStorage.VandraModules:WaitForChild("VandraTitle"))
-local VandraBoardConfiguration = require(ServerStorage.VandraModules:WaitForChild("VandraBoardConfiguration"))
-local PS = require(ReplicatedStorage:WaitForChild("VandraProfile"):WaitForChild("ProfileServiceVandra"))
+local VandraSpeedRunData       = require(ServerStorage.JekyModules:WaitForChild("VandraSpeedRunData"))
+local VandraConfig             = require(ServerStorage.JekyModules:WaitForChild("VandraConfig"))
+local VandraTitle              = require(ServerStorage.JekyModules:WaitForChild("VandraTitle"))
+local VandraBoardConfiguration = require(ServerStorage.JekyModules:WaitForChild("VandraBoardConfiguration"))
+local PS = require(ReplicatedStorage:WaitForChild("JekyProfile"):WaitForChild("ProfileServiceJeky"))
 
 local CONFIG = {
 GLOBAL_UPDATE_INTERVAL  = 60,

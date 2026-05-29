@@ -1,4 +1,4 @@
--- ReplicatedStorage/VandraProfile/ProfileServiceVandra
+-- ReplicatedStorage/JekyProfile/ProfileServiceJeky
 -- v8 — fix GlobalLB stale data + reset support
  
 local DataStoreService = game:GetService("DataStoreService")
@@ -284,7 +284,7 @@ local function safeSet(store, key, value)
                         -- ============================================================
                         -- 1. PLAYER PROFILE
                         -- ============================================================
-                        local PROFILE_STORE = "VandraProfile_v1"
+                        local PROFILE_STORE = "JekyProfile_v1"
                         local PROFILE_TMPL  = {
                         CurrentCheckpoint  = "BC",
                         VisitedCheckpoints = { BC = true },

@@ -5,10 +5,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 Players.CharacterAutoLoads = false
 Players.RespawnTime        = 2
  
-local VandraDataStore  = require(ServerStorage.VandraModules:WaitForChild("VandraDataStore"))
-local VandraConfig     = require(ServerStorage.VandraModules:WaitForChild("VandraConfig"))
-local VandraTitle      = require(ServerStorage.VandraModules:WaitForChild("VandraTitle"))
-local VandraGlobalData = require(ServerStorage.VandraModules:WaitForChild("VandraGlobalData"))
+local VandraDataStore  = require(ServerStorage.JekyModules:WaitForChild("VandraDataStore"))
+local VandraConfig     = require(ServerStorage.JekyModules:WaitForChild("VandraConfig"))
+local VandraTitle      = require(ServerStorage.JekyModules:WaitForChild("VandraTitle"))
+local VandraGlobalData = require(ServerStorage.JekyModules:WaitForChild("VandraGlobalData"))
  
 local CHECKPOINT_TOUCH_COOLDOWN = VandraConfig.TOUCH_COOLDOWN or 0.3
 local TELEPORT_TOUCH_COOLDOWN   = 0.5

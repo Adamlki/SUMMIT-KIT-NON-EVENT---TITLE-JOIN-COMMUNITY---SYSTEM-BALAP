@@ -12,13 +12,13 @@ local MessagingService  = game:GetService("MessagingService")
 -- ============================================================
 -- LOAD MODULES
 -- ============================================================
-local VandraModules = ServerStorage:WaitForChild("VandraModules")
+local JekyModules = ServerStorage:WaitForChild("JekyModules")
  
-local VandraTitle    = require(VandraModules:WaitForChild("VandraTitle"))
-local VandraConfig   = require(VandraModules:WaitForChild("VandraConfig"))
-local VandraVerified = require(VandraModules:WaitForChild("VandraVerified"))
-local VandraVipData  = require(VandraModules:WaitForChild("VandraVipData"))
-local VandraDataStore= require(VandraModules:WaitForChild("VandraDataStore"))
+local VandraTitle    = require(JekyModules:WaitForChild("VandraTitle"))
+local VandraConfig   = require(JekyModules:WaitForChild("VandraConfig"))
+local VandraVerified = require(JekyModules:WaitForChild("VandraVerified"))
+local VandraVipData  = require(JekyModules:WaitForChild("VandraVipData"))
+local VandraDataStore= require(JekyModules:WaitForChild("VandraDataStore"))
  
 -- ============================================================
 -- REMOTES SETUP
@@ -340,7 +340,7 @@ AdminPanel_Command.OnServerEvent:Connect(function(sender, cmdName, args)
                             local targetName = tostring(args[1] or "")
                             if targetName == "" then reply(false, "No target specified."); return end
                             
-                            local VandraSpeedRunData = require(VandraModules:WaitForChild("VandraSpeedRunData"))
+                            local VandraSpeedRunData = require(JekyModules:WaitForChild("VandraSpeedRunData"))
                             
                             local tp = findPlayer(targetName)
                             if tp then

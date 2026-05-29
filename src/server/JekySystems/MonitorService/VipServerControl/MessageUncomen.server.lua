@@ -7,7 +7,7 @@ local TextService       = game:GetService("TextService")
  
 --// LOAD VANDRA TITLE
 local VandraTitle = require(
-ServerStorage:WaitForChild("VandraModules"):WaitForChild("VandraTitle")
+ServerStorage:WaitForChild("JekyModules"):WaitForChild("VandraTitle")
 )
  
 --// AUTO CREATE REMOTE

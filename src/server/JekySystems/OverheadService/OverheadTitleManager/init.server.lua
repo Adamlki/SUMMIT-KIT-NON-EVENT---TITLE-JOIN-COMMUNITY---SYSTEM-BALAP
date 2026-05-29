@@ -3,7 +3,7 @@ local Players          = game:GetService("Players")
 local ServerStorage    = game:GetService("ServerStorage")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
  
-local VandraTitle = require(ServerStorage.VandraModules:WaitForChild("VandraTitle"))
+local VandraTitle = require(ServerStorage.JekyModules:WaitForChild("VandraTitle"))
  
 local VandraEvents = ReplicatedStorage:FindFirstChild("VandraEvents")
 if not VandraEvents then

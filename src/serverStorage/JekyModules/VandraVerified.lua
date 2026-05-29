@@ -1,6 +1,6 @@
--- ServerStorage/VandraModules/VandraVerified
+-- ServerStorage/JekyModules/VandraVerified
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local PS = require(ReplicatedStorage:WaitForChild("VandraProfile"):WaitForChild("ProfileServiceVandra"))
+local PS = require(ReplicatedStorage:WaitForChild("JekyProfile"):WaitForChild("ProfileServiceJeky"))
 local VandraVerified = {}
 VandraVerified.AutoVerifyRoles    = true
 VandraVerified.AlwaysVerifiedUsers= { "BukanYgDiaPilih","","kenn_justforu","TemanBaik" }

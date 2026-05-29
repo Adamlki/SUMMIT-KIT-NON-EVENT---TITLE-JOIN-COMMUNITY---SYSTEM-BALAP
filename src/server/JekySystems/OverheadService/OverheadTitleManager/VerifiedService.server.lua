@@ -2,9 +2,9 @@ local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage     = game:GetService("ServerStorage")
 
-local VandraVerified = require(ServerStorage.VandraModules.VandraVerified)
-local VandraTitle    = require(ServerStorage.VandraModules.VandraTitle)
-local VandraConfig   = require(ServerStorage.VandraModules.VandraConfig)
+local VandraVerified = require(ServerStorage.JekyModules.VandraVerified)
+local VandraTitle    = require(ServerStorage.JekyModules.VandraTitle)
+local VandraConfig   = require(ServerStorage.JekyModules.VandraConfig)
 
 local VandraEvents = ReplicatedStorage:FindFirstChild("VandraEvents")
 if not VandraEvents then
