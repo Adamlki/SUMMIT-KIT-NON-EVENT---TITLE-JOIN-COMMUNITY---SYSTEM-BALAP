@@ -1,4 +1,4 @@
--- ServerScriptService > JekySystems > MonitorServic > DonationBoardManager
+-- ServerScriptService > JekySystems > MonitorService > DonationBoardManager
 local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -30,19 +30,26 @@ end
 debugLog("INIT", "Memulai inisialisasi script DonationBoardManager...")
 
 -- ============================================
+-- REMOTE EVENT SETUP
+-- ============================================
+local UpdateDonationBoardEvent = ReplicatedStorage:FindFirstChild("UpdateDonationBoard")
+if not UpdateDonationBoardEvent then
+	UpdateDonationBoardEvent = Instance.new("RemoteEvent")
+	UpdateDonationBoardEvent.Name = "UpdateDonationBoard"
+	UpdateDonationBoardEvent.Parent = ReplicatedStorage
+end
+
+-- ============================================
 -- REFERENSI OBJEK
 -- ============================================
 local allPartsFolder = workspace:WaitForChild("AllPartSummitkitJeky")
 local leaderboardFolder = allPartsFolder:WaitForChild("LeaderBoard")
 local boardModel = leaderboardFolder:WaitForChild("DonationLeaderBoard")
 
-local uiInit = boardModel:WaitForChild("Board"):WaitForChild("SurfaceGui"):WaitForChild("Init")
-local timerLabel = boardModel:WaitForChild("Detik"):WaitForChild("SurfaceGui"):WaitForChild("DetikLabel")
 local statuesFolder = boardModel:FindFirstChild("Statues")
-
 local billboardTemplate = ReplicatedStorage:WaitForChild("DonationBillboardGui")
 
-if statuesFolder and uiInit and billboardTemplate then
+if statuesFolder and billboardTemplate then
 	debugLog("INIT", "Semua referensi objek berhasil ditemukan!")
 else
 	debugLog("INIT", "Peringatan: Ada objek yang hilang di Workspace atau ReplicatedStorage!", true)
@@ -192,7 +199,7 @@ local function updateStatue(rank, userId, displayName, totalDonated)
 end
 
 -- ============================================
--- FUNGSI UPDATE BOARD UI
+-- FUNGSI PULL DATA & UPDATE PATUNG & BROADCAST
 -- ============================================
 local function updateBoard()
 	debugLog("DATASTORE", "Memulai penarikan data dari OrderedDataStore...")
@@ -209,33 +216,27 @@ local function updateBoard()
 	local currentPage = pages:GetCurrentPage()
 	debugLog("DATASTORE", "Sukses menarik " .. #currentPage .. " data player.")
 
-	for rank = 1, MAX_ITEMS do
-		local frame = uiInit:FindFirstChild("Top" .. tostring(rank))
-		if not frame then 
-			debugLog("UI", "Frame Top" .. rank .. " tidak ditemukan di UI!", true)
-			continue 
-		end
+	local top10Data = {}
 
+	for rank = 1, MAX_ITEMS do
 		local data = currentPage[rank]
 
 		if data then
 			local userId = tonumber(string.match(data.key, "%d+"))
 			local totalDonated = data.value
-
 			local displayName = getOfflineDisplayName(userId)
 
-			frame.Username.Text = displayName
-			frame.Total.Text = "R$ " .. tostring(totalDonated)
-			frame.ImageLabel.Image = "rbxthumb://type=AvatarHeadShot&id=" .. tostring(userId) .. "&w=150&h=150"
+			table.insert(top10Data, {
+				Rank = rank,
+				UserId = userId,
+				DisplayName = displayName,
+				TotalDonated = totalDonated
+			})
 
 			if rank <= 3 then
 				updateStatue(rank, userId, displayName, totalDonated)
 			end
 		else
-			frame.Username.Text = "Belum Ada"
-			frame.Total.Text = "R$ 0"
-			frame.ImageLabel.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-
 			-- Hapus Billboard jika patung sudah tidak masuk Top 3
 			if rank <= 3 and statuesFolder then
 				local dummy = statuesFolder:FindFirstChild("Top" .. tostring(rank))
@@ -250,6 +251,9 @@ local function updateBoard()
 		end
 	end
 
+	-- Broadcast data ke semua client untuk update UI
+	UpdateDonationBoardEvent:FireAllClients(top10Data)
+
 	debugLog("DATASTORE", "Proses update UI dan Patung selesai.")
 end
 
@@ -261,12 +265,7 @@ task.spawn(function()
 	debugLog("LOOP", "Loop utama berjalan.")
 
 	while true do
-		timerLabel.Text = "Updating..."
 		updateBoard()
-
-		for i = REFRESH_TIME, 1, -1 do
-			timerLabel.Text = "Update: " .. tostring(i) .. "s"
-			task.wait(1)
-		end
+		task.wait(REFRESH_TIME)
 	end
 end)
