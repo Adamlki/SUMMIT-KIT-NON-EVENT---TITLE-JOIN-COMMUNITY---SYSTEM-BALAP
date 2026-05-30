@@ -5,7 +5,12 @@ local TweenService      = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterGui        = game:GetService("StarterGui")   -- FIX: untuk block leaderboard Roblox
 local LocalPlayer       = Players.LocalPlayer
- 
+
+local DEBUG_MODE = false
+local function debugWarn(msg)
+    if DEBUG_MODE then warn(msg) end
+end
+
 -- ============================================================
 -- GUI REFERENCES (Dengan Timeout Anti-Error)
 -- ============================================================
@@ -17,7 +22,7 @@ local IsiGui          = PlayerGui:WaitForChild("IsiGui", 10)
 
 -- Cegah error lanjutan jika UI ternyata benar-benar hilang/terhapus
 if not ListGui or not IsiGui then
-	warn("[LeaderStatGui] ListGui atau IsiGui tidak ditemukan di PlayerGui!")
+	debugWarn("[LeaderStatGui] ListGui atau IsiGui tidak ditemukan di PlayerGui!")
 	return -- Hentikan script agar tidak error beruntun
 end
 

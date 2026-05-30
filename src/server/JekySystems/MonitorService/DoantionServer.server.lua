@@ -54,7 +54,10 @@ local function broadcastDonation(donorPlayer, amount)
 end
  
 local DataStoreService = game:GetService("DataStoreService")
-local DonationDataStore = DataStoreService:GetOrderedDataStore("GlobalDonationLB_v1")
+local ServerStorage = game:GetService("ServerStorage")
+local JekyDSKeys = require(ServerStorage:WaitForChild("JekyModules"):WaitForChild("JekyDSKeys"))
+
+local DonationDataStore = DataStoreService:GetOrderedDataStore(JekyDSKeys.Keys.DonationGlobalLB)
 
 -- ============================================
 -- PROCESS RECEIPT (MarketplaceService)

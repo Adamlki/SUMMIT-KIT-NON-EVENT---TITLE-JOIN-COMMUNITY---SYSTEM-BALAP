@@ -4,6 +4,11 @@ local RunService = game:GetService("RunService")
  
 local Player = Players.LocalPlayer
 local ApplyEvent = RS:WaitForChild("ApplyCustomTitle")
+
+local DEBUG_MODE = false
+local function debugWarn(msg)
+    if DEBUG_MODE then warn(msg) end
+end
  
 local JekyConfig = require(RS:WaitForChild("Shared"):WaitForChild("JekyConfig"))
 local isAdmin = JekyConfig.IsAdmin(Player.UserId, Player.Name)
@@ -13,7 +18,7 @@ local playerGui = Player:WaitForChild("PlayerGui")
 -- Cek ListGui dan tombol toggle
 local listGui = playerGui:WaitForChild("ListGui", 10)
 if not listGui then
-    warn("[TittlegiverNew] ListGui tidak ditemukan di PlayerGui!")
+    debugWarn("[TittlegiverNew] ListGui tidak ditemukan di PlayerGui!")
     return
 end
 
@@ -141,7 +146,7 @@ end
 -- =========================================================
 local titlePanel = playerGui:WaitForChild("TitlePanel", 10)
 if not titlePanel then
-    warn("[TittlegiverNew] UI TitlePanel_V3 tidak ditemukan! Pastikan GUI sudah ada di StarterGui.")
+    debugWarn("[TittlegiverNew] UI TitlePanel_V3 tidak ditemukan! Pastikan GUI sudah ada di StarterGui.")
     return
 end
 

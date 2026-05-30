@@ -4,7 +4,8 @@ local Players = game:GetService("Players")
 local ServerStorage = game:GetService("ServerStorage")
 local CollectionService = game:GetService("CollectionService")
 
-local titleStore = DSS:GetDataStore("TitleStore_V3_Final")
+local JekyDSKeys = require(ServerStorage:WaitForChild("JekyModules"):WaitForChild("JekyDSKeys"))
+local titleStore = DSS:GetDataStore(JekyDSKeys.Keys.TitleStore)
 local ApplyEvent = RS:FindFirstChild("ApplyCustomTitle") or Instance.new("RemoteEvent")
 ApplyEvent.Name = "ApplyCustomTitle"
 ApplyEvent.Parent = RS
@@ -13,6 +14,7 @@ local TitleGiver = RS:WaitForChild("TitleGiver")
 
 -- Memanggil module JekyConfig untuk cek akses Admin
 local JekyConfig = require(ServerStorage:WaitForChild("JekyModules"):WaitForChild("JekyConfig"))
+
 local PRESETS = {
 	{Colors = {Color3.fromRGB(0, 255, 255), Color3.fromRGB(180, 0, 255), Color3.fromRGB(255, 215, 0), Color3.fromRGB(255, 105, 180)}},
 	{Colors = {Color3.fromRGB(0, 0, 255), Color3.fromRGB(255, 0, 0), Color3.fromRGB(255, 255, 0)}},

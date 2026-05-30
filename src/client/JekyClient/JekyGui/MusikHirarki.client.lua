@@ -9,6 +9,11 @@ local Workspace = game:GetService("Workspace")
 -- SETTINGS
 -- ============================================
 local AUTO_PLAY = true  -- Set ke true agar musik otomatis play saat masuk game
+local DEBUG_MODE = false
+
+local function debugWarn(msg)
+    if DEBUG_MODE then warn(msg) end
+end
  
 -- ============================================
 -- CORE VARIABLES
@@ -47,13 +52,13 @@ local hiddenPosition
 local function initializeMusicFolder()
     local root = Workspace:WaitForChild("AllPartSummitkitJeky", 10)
     if not root then
-        warn("[MusicSystem] AllPartSummitkitJeky not found")
+        debugWarn("[MusicSystem] AllPartSummitkitJeky not found")
         return false
     end
  
     musicFolder = root:WaitForChild("MusikFolder", 10)
     if not musicFolder then
-        warn("[MusicSystem] MusikFolder not found")
+        debugWarn("[MusicSystem] MusikFolder not found")
         return false
     end
  
@@ -244,7 +249,7 @@ local function waitForElements()
         IsiGui = playerGui:WaitForChild("IsiGui", 15)
     end)
     if not ok or not IsiGui then
-        warn("[MusicSystem] IsiGui tidak ditemukan!")
+        debugWarn("[MusicSystem] IsiGui tidak ditemukan!")
         return false
     end
  
@@ -252,7 +257,7 @@ local function waitForElements()
         MusikPanel = IsiGui:WaitForChild("MusikPanel", 15)
     end)
     if not ok2 or not MusikPanel then
-        warn("[MusicSystem] MusikPanel tidak ditemukan!")
+        debugWarn("[MusicSystem] MusikPanel tidak ditemukan!")
         return false
     end
  
@@ -297,7 +302,7 @@ local function findMusikButton()
             return gui
         end
     end
-    warn("[MusicSystem] MusikButton tidak ditemukan!")
+    debugWarn("[MusicSystem] MusikButton tidak ditemukan!")
     return nil
 end
  
@@ -334,7 +339,7 @@ local function initializeSystem()
     if not initializeMusicFolder() then return end
  
     if #soundList == 0 then
-        warn("[MusicSystem] Tidak ada lagu tersedia!")
+        debugWarn("[MusicSystem] Tidak ada lagu tersedia!")
         return
     end
  
@@ -412,7 +417,7 @@ task.spawn(function()
  
     local success, err = pcall(initializeSystem)
     if not success then
-        warn("[MusicSystem ERROR]: " .. err)
+        debugWarn("[MusicSystem ERROR]: " .. err)
     end
 end)
 

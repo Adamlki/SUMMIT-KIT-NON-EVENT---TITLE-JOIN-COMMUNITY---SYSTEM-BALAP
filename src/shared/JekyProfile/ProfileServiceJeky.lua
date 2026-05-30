@@ -3,6 +3,9 @@
  
 local DataStoreService = game:GetService("DataStoreService")
 local Players          = game:GetService("Players")
+local ServerStorage    = game:GetService("ServerStorage")
+local JekyDSKeys       = require(ServerStorage:WaitForChild("JekyModules"):WaitForChild("JekyDSKeys"))
+local DSKeys           = JekyDSKeys.Keys
  
 local PS = {}
  
@@ -127,7 +130,7 @@ local function safeSet(store, key, value)
                 end
                 usernameWriteBusy[userId] = true
                 task.spawn(function()
-                    local store = getStore("JekyUsernameCache_v2")
+                    local store = getStore(DSKeys.Profile.."_UserCache") -- Menggunakan prefix Profile agar unik
                     if store and waitForWriteBudget(15) then
                         pcall(function() store:SetAsync("U_"..userId, name) end)
                             usernameWriteLast[userId] = os.time()
@@ -183,7 +186,7 @@ local function safeSet(store, key, value)
                     
                     usernameResolving[userId] = true
                     task.spawn(function()
-                        local store = getStore("JekyUsernameCache_v2")
+                        local store = getStore(DSKeys.Profile.."_UserCache")
                         if store then
                             local ok, name = pcall(function() return store:GetAsync("U_"..userId) end)
                                 if ok and name and name ~= "" then
@@ -284,7 +287,7 @@ local function safeSet(store, key, value)
                         -- ============================================================
                         -- 1. PLAYER PROFILE
                         -- ============================================================
-                        local PROFILE_STORE = "JekyProfile_v1"
+                        local PROFILE_STORE = DSKeys.Profile
                         local PROFILE_TMPL  = {
                         CurrentCheckpoint  = "BC",
                         VisitedCheckpoints = { BC = true },
@@ -423,7 +426,7 @@ local function safeSet(store, key, value)
                                 -- ============================================================
                                 -- 2. VIP
                                 -- ============================================================
-                                local VIP_STORE = "JekyVIP_v2"
+                                local VIP_STORE = DSKeys.VIP
                                 local vipCache  = {}
                                 local vipSnap   = {}
                                 local vipSaving = {}
@@ -464,7 +467,7 @@ local function safeSet(store, key, value)
                                         -- ============================================================
                                         -- 3. GLOBAL CONFIG
                                         -- ============================================================
-                                        local CFG_STORE = "JekyGlobalConfig_v1"
+                                        local CFG_STORE = DSKeys.GlobalConfig
                                         local cfgCache  = { SummitValue = 1, ApexValue = 2000, SkipCheckpoint = false }
                                         local cfgSnap   = { SummitValue = 1, ApexValue = 2000, SkipCheckpoint = false }
                                         local cfgSaving = false
@@ -512,7 +515,7 @@ local function safeSet(store, key, value)
                                         -- ============================================================
                                         -- 4. DYNAMIC ROLES
                                         -- ============================================================
-                                        local ROLES_STORE    = "DynamicRoles_v3"
+                                        local ROLES_STORE    = DSKeys.DynamicRoles
                                         local rolesCache     = {}
                                         local rolesPending   = {}
                                         local rolesDebounce  = {}
@@ -594,7 +597,7 @@ local function safeSet(store, key, value)
                                                                         -- ============================================================
                                                                         -- 5. VERIFIED
                                                                         -- ============================================================
-                                                                        local VERIFIED_STORE = "JekyVerifiedDynamic_v1"
+                                                                        local VERIFIED_STORE = DSKeys.VerifiedDynamic
                                                                         local verifiedCache  = nil
                                                                         local verifiedSaving = false
                                                                         local verifiedDirty  = false
@@ -664,8 +667,8 @@ local function safeSet(store, key, value)
                                                                         -- ============================================================
                                                                         -- 6. SPEEDRUN
                                                                         -- ============================================================
-                                                                        local SR_STORE    = "JekySpeedRun_v1"
-                                                                        local SR_LB_STORE = "JekyGlobalSpeedRun_v1"
+                                                                        local SR_STORE    = DSKeys.SpeedRun
+                                                                        local SR_LB_STORE = DSKeys.SpeedRunGlobalLB
                                                                         local srCache     = {}
                                                                         local srSaving    = {}
                                                                         PS.SpeedRun = {}

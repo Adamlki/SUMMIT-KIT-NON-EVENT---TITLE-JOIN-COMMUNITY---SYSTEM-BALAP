@@ -3,8 +3,10 @@ local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserService = game:GetService("UserService")
+local ServerStorage = game:GetService("ServerStorage")
 
-local DonationDataStore = DataStoreService:GetOrderedDataStore("GlobalDonationLB_v1")
+local JekyDSKeys = require(ServerStorage:WaitForChild("JekyModules"):WaitForChild("JekyDSKeys"))
+local DonationDataStore = DataStoreService:GetOrderedDataStore(JekyDSKeys.Keys.DonationGlobalLB)
 
 -- ============================================
 -- KONFIGURASI & DEBUGGER
@@ -13,7 +15,7 @@ local REFRESH_TIME = 120
 local MAX_ITEMS = 10
 local EMOTE_ID = "rbxassetid://140349022227594"
 
-local DEBUG_MODE = true -- SET KE 'false' JIKA GAME SUDAH RILIS AGAR OUTPUT TIDAK SPAM
+local DEBUG_MODE = false -- SET KE 'false' JIKA GAME SUDAH RILIS AGAR OUTPUT TIDAK SPAM
 
 local function debugLog(tag, message, isError)
 	if not DEBUG_MODE then return end

@@ -14,6 +14,8 @@ JekyConfig.SUMMIT_REWARDS = {
 	Summit     = 1,
 	ApexSummit = 2
 }
+
+-- DataStoreKeys have been moved to JekyDSKeys.lua to prevent cyclic dependency.
  
 -- Jauh lebih ringkas! Hanya tulis perintah yang diizinkan (true).
 -- Jika role atau perintah tidak tertulis, sistem otomatis menganggapnya "false" (tidak punya akses).

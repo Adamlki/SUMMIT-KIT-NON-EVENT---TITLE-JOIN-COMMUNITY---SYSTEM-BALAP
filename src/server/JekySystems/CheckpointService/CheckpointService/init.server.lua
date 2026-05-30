@@ -497,14 +497,20 @@ local function safeLoadCharacter(player)
                 
                 local function onCheckpointTouch(modelName, hit)
                     local character = hit.Parent
-                    if not character or not character:IsA("Model") then return end
+                    if not character then return end
+                    
+                    -- FAST DEBOUNCE: Cek di level karakter sebelum memanggil API berat
+                    local now = os.clock()
+                    local lastCharTouch = character:GetAttribute("LastCPTouch") or 0
+                    if now - lastCharTouch < CHECKPOINT_TOUCH_COOLDOWN then return end
+                    character:SetAttribute("LastCPTouch", now)
+                    
                     local humanoid = character:FindFirstChildOfClass("Humanoid")
                     if not humanoid or humanoid.Health <= 0 then return end
                     local player = Players:GetPlayerFromCharacter(character)
                     if not player then return end
                     
                     local uid = player.UserId
-                    local now = os.clock()
                     if PlayerSpawnImmunity[uid] and now < PlayerSpawnImmunity[uid] then return end
                     if PlayerLastTouch[uid] and (now - PlayerLastTouch[uid]) < CHECKPOINT_TOUCH_COOLDOWN then return end
                     PlayerLastTouch[uid] = now
@@ -515,6 +521,9 @@ local function safeLoadCharacter(player)
                     local currentCP = cpLS.Value
                     
                     if checkpointId == "BC" then
+                        -- FIX SPAM: Jika sudah di BC dan sedang main, jangan update datastore terus menerus
+                        if currentCP == "BC" and PlayerRoundState[uid] then return end
+
                         if not PlayerBCNotified[uid] then
                             PlayerBCNotified[uid] = true
                             CP_PlayerTouched:FireClient(player, { CheckpointId = "BC", IsSummit = false, SummitValue = 0, IsNewRound = true })
@@ -546,6 +555,11 @@ local function safeLoadCharacter(player)
                         if not PlayerVisited[uid].BC then return end
                         
                         local skipMode = JekyConfig:GetSkipCheckpointMode()
+                        
+                        -- FIX SPAM: Jika player menginjak CP yang sama berulang kali
+                        if currentCP == checkpointId then return end
+                        -- Jika player sudah mengunjungi CP ini sebelumnya
+                        if PlayerVisited[uid] and PlayerVisited[uid][checkpointId] then return end
                         
                         if skipMode then
                             PlayerVisited[uid][checkpointId] = true
