@@ -5,15 +5,26 @@ local RunService = game:GetService("RunService")
 local Player = Players.LocalPlayer
 local ApplyEvent = RS:WaitForChild("ApplyCustomTitle")
  
-local ADMINS = {"adamzz3372","",""}
-if not table.find(ADMINS, Player.Name) then return end
+local JekyConfig = require(RS:WaitForChild("Shared"):WaitForChild("JekyConfig"))
+local isAdmin = JekyConfig.IsAdmin(Player.UserId, Player.Name)
  
 local playerGui = Player:WaitForChild("PlayerGui")
 
 -- Langsung tunggu ListGui di luar, karena wujud aslinya memang ada di luar
-local listGui = playerGui:WaitForChild("ListGui", 5)
+local listGui = playerGui:WaitForChild("ListGui", 10)
+
+if not listGui then
+    warn("[TittlegiverNew] ListGui tidak ditemukan di PlayerGui!")
+    return
+end
 
 local toggleBtn = listGui:WaitForChild("TitleButton")
+
+if not isAdmin then
+    toggleBtn.Visible = false
+    return
+end
+
 toggleBtn.Visible = true
  
 local PRESETS = {

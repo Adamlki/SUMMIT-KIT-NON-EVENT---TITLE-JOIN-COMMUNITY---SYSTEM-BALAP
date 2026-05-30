@@ -141,21 +141,9 @@ end
 -- ============================================================
 -- ROLE CONFIG
 -- ============================================================
-local ROLE_ORDER = {
-"Owner","Developer","HeadAdmin",
-"Admin","Moderator","Streamer","Community",
-}
-local ROLE_RULES = {
-Owner     = { UserIds = {},                          Usernames = { "adamzz3372" } },
-Developer = { UserIds = {},                          Usernames = { "" } },
-HeadAdmin = { UserIds = {},                          Usernames = { "" } },
-Admin     = { UserIds = {},                          Usernames = { "" } },
-Moderator = { UserIds = {},                          Usernames = { "" } },
-Streamer  = { UserIds = {},                          Usernames = { "" } },
-Community = { UserIds = {},                          Usernames = { "" } },
-}
+local JekyConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("JekyConfig"))
 local ROLE_PRIORITY = {}
-for i, name in ipairs(ROLE_ORDER) do ROLE_PRIORITY[name] = i end
+for i, name in ipairs(JekyConfig.RoleOrder) do ROLE_PRIORITY[name] = i end
  
 -- ============================================================
 -- PALETTE
@@ -192,8 +180,8 @@ end
 local function getPlayerRole(player)
     local dyn = player:GetAttribute("DynamicRole")
     if dyn and dyn ~= "" then return dyn end
-    for _, name in ipairs(ROLE_ORDER) do
-        local rule = ROLE_RULES[name]
+    for _, name in ipairs(JekyConfig.RoleOrder) do
+        local rule = JekyConfig.RoleRules[name]
         if rule then
             if tContains(rule.UserIds,   player.UserId) then return name end
             if tContains(rule.Usernames, player.Name)   then return name end
@@ -241,8 +229,8 @@ local function sortedPlayers()
     table.sort(list, function(a, b)
         local ra = getPlayerRole(a)
         local rb = getPlayerRole(b)
-        local pa = ra and (ROLE_PRIORITY[ra] or #ROLE_ORDER + 1) or (#ROLE_ORDER + 1)
-        local pb = rb and (ROLE_PRIORITY[rb] or #ROLE_ORDER + 1) or (#ROLE_ORDER + 1)
+        local pa = ra and (ROLE_PRIORITY[ra] or #JekyConfig.RoleOrder + 1) or (#JekyConfig.RoleOrder + 1)
+        local pb = rb and (ROLE_PRIORITY[rb] or #JekyConfig.RoleOrder + 1) or (#JekyConfig.RoleOrder + 1)
         if pa ~= pb then return pa < pb end
         return getSummit(a) > getSummit(b)
     end)

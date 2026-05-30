@@ -4,10 +4,12 @@
 local Players           = game:GetService("Players")
 local ServerStorage     = game:GetService("ServerStorage")
 local HttpService       = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Modules           = ServerStorage:WaitForChild("JekyModules")
-local JekyTitle       = require(Modules:WaitForChild("JekyTitle"))
+local JekyTitle         = require(Modules:WaitForChild("JekyTitle"))
 local BoardConfig       = require(Modules:WaitForChild("JekyBoardConfiguration"))
+local JekyConfig        = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("JekyConfig"))
 
 -- ============================================================
 -- PATH
@@ -76,9 +78,9 @@ end
 local entries = {}      -- { roleName, userId, cachedDisplay, cachedThumb }
 local userIdToEntry = {} -- userId -> entry (for quick lookup)
 
-for _, roleName in ipairs(JekyTitle.RoleOrder) do
+for _, roleName in ipairs(JekyConfig.RoleOrder) do
     if BoardConfig:CanShowOnAdminBoard(roleName) then
-        local rule = JekyTitle.RoleRules[roleName]
+        local rule = JekyConfig.RoleRules[roleName]
         if rule then
             local seen = {}
             

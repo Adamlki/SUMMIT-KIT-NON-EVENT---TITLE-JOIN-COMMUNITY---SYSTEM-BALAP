@@ -4,7 +4,7 @@ local ServerStorage    = game:GetService("ServerStorage")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
  
 local JekyTitle = require(ServerStorage.JekyModules:WaitForChild("JekyTitle"))
- 
+local JekyConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("JekyConfig"))
 local JekyEvents = ReplicatedStorage:FindFirstChild("JekyEvents")
 if not JekyEvents then
     JekyEvents = Instance.new("Folder")
@@ -30,18 +30,9 @@ local RoleAPI_RemoveRole  = getOrCreateRE("RoleAPI_RemoveRole")
 local PlayerTitleCache = {}
 local updateThrottle   = {}
  
-local ADMIN_USER_IDS  = {}
-local ADMIN_USERNAMES = { "adamzz3372"}
- 
 local function isAdmin(player)
     if not player then return false end
-    for _, id in ipairs(ADMIN_USER_IDS) do
-        if player.UserId == id then return true end
-    end
-    for _, name in ipairs(ADMIN_USERNAMES) do
-        if player.Name == name then return true end
-    end
-    return false
+    return JekyConfig.IsAdmin(player.UserId, player.Name)
 end
  
 local function getBestSummit(player)
