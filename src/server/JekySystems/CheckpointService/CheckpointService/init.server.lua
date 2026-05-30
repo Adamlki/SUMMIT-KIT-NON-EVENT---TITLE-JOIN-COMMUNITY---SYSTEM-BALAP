@@ -356,20 +356,19 @@ local function safeLoadCharacter(player)
     end
     
     local function resetAndTeleportToBC(player)
-        if not player or not player.Parent then return end
-        local uid = player.UserId
-        
-        resetPlayer(player)
-        
-        local bcSpawn = getSpawnLocation("BC")
-        if bcSpawn then player.RespawnLocation = bcSpawn end
-        
-        task.wait(0.15)
-        
-        if player.Character then
-            teleportToCheckpoint(player.Character, "BC")
-        end
+    if not player or not player.Parent then return end
+    local uid = player.UserId
+    
+    resetPlayer(player)
+    
+    local bcSpawn = getSpawnLocation("BC")
+    if bcSpawn then player.RespawnLocation = bcSpawn end
+    
+    -- Jeda waktu (task.wait) dihapus agar teleport instan dan mencegah bug
+    if player.Character then
+        teleportToCheckpoint(player.Character, "BC")
     end
+end
     
     local function getHighestCPNumber()
         local cpFolder = getCheckpointFolder()
@@ -618,31 +617,42 @@ local function safeLoadCharacter(player)
                 -- DO NOT auto-set transparency on TeleportPart parts
                 
                 local function onTeleportTouch(tpPart, hit)
-                    local character = hit.Parent
-                    if not character or not character:IsA("Model") then return end
-                    local humanoid = character:FindFirstChildOfClass("Humanoid")
-                    if not humanoid or humanoid.Health <= 0 then return end
-                    local player = Players:GetPlayerFromCharacter(character)
-                    if not player then return end
-                    
-                    local uid = player.UserId
-                    local now = os.clock()
-                    if PlayerSpawnImmunity[uid] and now < PlayerSpawnImmunity[uid] then return end
-                    if PlayerLastTouch[uid] and (now - PlayerLastTouch[uid]) < TELEPORT_TOUCH_COOLDOWN then return end
-                    PlayerLastTouch[uid] = now
-                    
-                    if string.match(tpPart.Name, "^BackBC") then
-                        -- BackBC, BackBC1, BackBC2, dst: reset putaran + teleport ke BC
-                        resetAndTeleportToBC(player)
-                    else
-                        -- Other teleport parts: teleport to Destinasi of player's current checkpoint
-                        local cpLS = ensureLeaderstats(player)
-                        local currentCP = cpLS.Value
-                        if player.Character then
-                            teleportToCheckpoint(player.Character, currentCP)
-                        end
-                    end
-                end
+    local character = hit.Parent
+    if not character or not character:IsA("Model") then return end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid or humanoid.Health <= 0 then return end
+    local player = Players:GetPlayerFromCharacter(character)
+    if not player then return end
+    
+    local uid = player.UserId
+    local now = os.clock()
+    if PlayerSpawnImmunity[uid] and now < PlayerSpawnImmunity[uid] then return end
+    if PlayerLastTouch[uid] and (now - PlayerLastTouch[uid]) < TELEPORT_TOUCH_COOLDOWN then return end
+    PlayerLastTouch[uid] = now
+    
+    -- Cek berlapis: cari apakah nama part atau nama Parent/Folder di atasnya mengandung kata "backbc"
+    local isBackBC = false
+    local currentObj = tpPart
+    while currentObj and currentObj ~= workspace do
+        if string.find(string.lower(currentObj.Name), "backbc") then
+            isBackBC = true
+            break
+        end
+        currentObj = currentObj.Parent
+    end
+
+    if isBackBC then
+        -- Jika objek atau parent-nya bernama BackBC, reset ke BC persis seperti GUI Button
+        resetAndTeleportToBC(player)
+    else
+        -- Jika ini part teleport biasa, pindahkan ke Destinasi checkpoint saat ini
+        local cpLS = ensureLeaderstats(player)
+        local currentCP = cpLS.Value
+        if player.Character then
+            teleportToCheckpoint(player.Character, currentCP)
+        end
+    end
+end
                 
                 for _, part in ipairs(tpFolder:GetDescendants()) do
                     if part:IsA("BasePart") then
