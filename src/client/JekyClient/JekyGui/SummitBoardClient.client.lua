@@ -16,13 +16,15 @@ local function fmtNum(n)
     else return tostring(math.floor(n)) end
 end
 
-local function findLBs()
+-- [OPTIMASI] Gunakan fungsi findLBs secara dinamis agar anti-error saat StreamingEnabled
+local function getActiveLBs()
     local list = {}
     local cur = workspace
     for _, part in ipairs(string.split(CONFIG.LB_PATH, "/")) do
         cur = cur:FindFirstChild(part)
         if not cur then return {} end
     end
+    
     for _, model in ipairs(cur:GetChildren()) do
         if not model:IsA("Model") then continue end
         local nl = model.Name:lower()
@@ -39,27 +41,31 @@ local function findLBs()
         if not (bsg and dsg) then continue end
         
         table.insert(list, {
+            Model     = model,
             BSG       = bsg,
             DSG       = dsg,
             IsGlobal  = isG,
             Interval  = isG and CONFIG.GLOBAL_INTERVAL or CONFIG.SERVER_INTERVAL,
-            Countdown = isG and CONFIG.GLOBAL_INTERVAL or CONFIG.SERVER_INTERVAL,
         })
     end
     return list
 end
 
--- Tunggu sebentar sampai Map/LeaderBoard termuat
-task.wait(2)
-local lbs = findLBs()
 local SrvData = {}
 local GlbData = {}
+local LbTimers = {} -- Menyimpan state timer untuk tiap papan
+local lastGlobalSync = 0
+local lastServerSync = 0
 
 local function render(lb)
     local init = lb.BSG:FindFirstChild("Init")
     if not init then return end
     
     local data = lb.IsGlobal and GlbData or SrvData
+    local currentSync = lb.IsGlobal and lastGlobalSync or lastServerSync
+    
+    -- Cegah merender ulang jika datanya sama dan model belum dire-render
+    if lb.Model:GetAttribute("LastSync") == currentSync then return end
     
     for i = 1, CONFIG.MAX_ENTRIES do
         local tf = init:FindFirstChild("Top"..i)
@@ -83,47 +89,56 @@ local function render(lb)
             if il and il:IsA("ImageLabel") then il.Image = "" end
         end
     end
-end
-
-local function renderAll()
-    for _, lb in ipairs(lbs) do render(lb) end
+    
+    lb.Model:SetAttribute("LastSync", currentSync)
 end
 
 UpdateSummitBoard.OnClientEvent:Connect(function(payload)
     if payload.Type == "Server" then
         SrvData = payload.Data
-        for _, lb in ipairs(lbs) do
-            if not lb.IsGlobal then
-                lb.Countdown = lb.Interval
-                render(lb)
-            end
-        end
+        lastServerSync = os.time()
     elseif payload.Type == "Global" then
         GlbData = payload.Data
-        for _, lb in ipairs(lbs) do
-            if lb.IsGlobal then
-                lb.Countdown = lb.Interval
-                render(lb)
-            end
-        end
+        lastGlobalSync = os.time()
     elseif payload.Type == "UpdateNames" then
-        if payload.ServerData then SrvData = payload.ServerData end
-        if payload.GlobalData then GlbData = payload.GlobalData end
-        renderAll()
+        if payload.ServerData then SrvData = payload.ServerData; lastServerSync = os.time() end
+        if payload.GlobalData then GlbData = payload.GlobalData; lastGlobalSync = os.time() end
+    end
+    
+    -- Reset timer berdasarkan event data yang masuk
+    for _, lb in ipairs(getActiveLBs()) do
+        if payload.Type == "Global" and lb.IsGlobal then
+            LbTimers[lb.Model] = lb.Interval
+        elseif payload.Type == "Server" and not lb.IsGlobal then
+            LbTimers[lb.Model] = lb.Interval
+        end
+        render(lb)
     end
 end)
 
--- Background Countdown Loop
+-- Background Countdown Loop & Streaming Recovery
 task.spawn(function()
     while true do
         task.wait(1)
-        for _, lb in ipairs(lbs) do
-            lb.Countdown = lb.Countdown - 1
+        
+        local activeLBs = getActiveLBs()
+        for _, lb in ipairs(activeLBs) do
+            -- Inisialisasi timer jika belum ada
+            if not LbTimers[lb.Model] then
+                LbTimers[lb.Model] = lb.Interval
+            end
+            
+            -- Kurangi timer
+            LbTimers[lb.Model] = math.max(0, LbTimers[lb.Model] - 1)
+            
             local dtlb = lb.DSG:FindFirstChild("DetikLabel")
             if dtlb then
-                local t = math.max(0, math.floor(lb.Countdown))
+                local t = LbTimers[lb.Model]
                 dtlb.Text = t > 0 and ("Update in "..t.." second"..(t ~= 1 and "s" or "")) or "Updating..."
             end
+            
+            -- Auto-recovery render jika model baru stream in
+            render(lb)
         end
     end
 end)
