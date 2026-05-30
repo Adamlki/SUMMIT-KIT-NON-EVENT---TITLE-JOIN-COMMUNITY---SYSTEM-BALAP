@@ -8,8 +8,8 @@ local LocalPlayer = Players.LocalPlayer
 local OverheadFolder = ReplicatedStorage:WaitForChild("Overhead")
 local TEMPLATE       = OverheadFolder:WaitForChild("BillboardGui")
  
-local VandraEvents  = ReplicatedStorage:WaitForChild("VandraEvents")
-local OT_TitleUpdate = VandraEvents:WaitForChild("OT_TitleUpdate")
+local JekyEvents  = ReplicatedStorage:WaitForChild("JekyEvents")
+local OT_TitleUpdate = JekyEvents:WaitForChild("OT_TitleUpdate")
  
 local TitlesHidden     = false
 local ActiveBillboards = {}
@@ -78,7 +78,7 @@ local function cleanupDuplicates(character)
     local function findTitlesIn(parent)
         if not parent then return end
         for _, child in ipairs(parent:GetChildren()) do
-            if child.Name == "VandraOverhead" and child:IsA("BillboardGui") then
+            if child.Name == "JekyOverhead" and child:IsA("BillboardGui") then
                 table.insert(allTitles, child)
             end
         end
@@ -100,7 +100,7 @@ local function cleanupDuplicates(character)
                 if not head then head = character:WaitForChild("Head", 3) end
                 if not head then return nil end
                 local bill = TEMPLATE:Clone()
-                bill.Name = "VandraOverhead"
+                bill.Name = "JekyOverhead"
                 bill:SetAttribute("CreationTime", tick())
                 bill.Enabled = not TitlesHidden
                 bill.Parent = head
@@ -111,7 +111,7 @@ local function cleanupDuplicates(character)
                 if not character or not character.Parent then return nil end
                 cleanupDuplicates(character)
                 local head = character:FindFirstChild("Head")
-                local bill = head and head:FindFirstChild("VandraOverhead")
+                local bill = head and head:FindFirstChild("JekyOverhead")
                 if bill and bill:IsA("BillboardGui") and bill.Parent then
                     bill.Enabled = not TitlesHidden
                     return bill
@@ -356,7 +356,7 @@ local function cleanupDuplicates(character)
                                 if char then
                                     local head = char:FindFirstChild("Head")
                                     if head then
-                                        local bill = head:FindFirstChild("VandraOverhead")
+                                        local bill = head:FindFirstChild("JekyOverhead")
                                         if bill then bill.Enabled = not hidden end
                                     end
                                 end
@@ -464,7 +464,7 @@ local function cleanupDuplicates(character)
                                                                     if char and char.Parent then
                                                                         local head = char:FindFirstChild("Head")
                                                                         if head then
-                                                                            local bill = head:FindFirstChild("VandraOverhead")
+                                                                            local bill = head:FindFirstChild("JekyOverhead")
                                                                             if not bill or not bill.Parent then
                                                                                 ensureTitle(char)
                                                                                 refreshTitle(plr)

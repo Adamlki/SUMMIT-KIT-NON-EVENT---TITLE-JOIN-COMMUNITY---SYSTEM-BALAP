@@ -22,31 +22,31 @@ task.spawn(function()
     JekyConfig:LoadValues()
 end)
  
-local VandraEvents = ReplicatedStorage:FindFirstChild("VandraEvents")
-if not VandraEvents then
-    VandraEvents        = Instance.new("Folder")
-    VandraEvents.Name   = "VandraEvents"
-    VandraEvents.Parent = ReplicatedStorage
+local JekyEvents = ReplicatedStorage:FindFirstChild("JekyEvents")
+if not JekyEvents then
+    JekyEvents        = Instance.new("Folder")
+    JekyEvents.Name   = "JekyEvents"
+    JekyEvents.Parent = ReplicatedStorage
 end
  
 local function getOrCreateRE(name)
-    local ev = VandraEvents:FindFirstChild(name)
-    if not ev then ev = Instance.new("RemoteEvent"); ev.Name = name; ev.Parent = VandraEvents end
+    local ev = JekyEvents:FindFirstChild(name)
+    if not ev then ev = Instance.new("RemoteEvent"); ev.Name = name; ev.Parent = JekyEvents end
     return ev
 end
 local function getOrCreateBE(name)
-    local ev = VandraEvents:FindFirstChild(name)
-    if not ev then ev = Instance.new("BindableEvent"); ev.Name = name; ev.Parent = VandraEvents end
+    local ev = JekyEvents:FindFirstChild(name)
+    if not ev then ev = Instance.new("BindableEvent"); ev.Name = name; ev.Parent = JekyEvents end
     return ev
 end
 local function getOrCreateBF(name)
-    local ev = VandraEvents:FindFirstChild(name)
-    if not ev then ev = Instance.new("BindableFunction"); ev.Name = name; ev.Parent = VandraEvents end
+    local ev = JekyEvents:FindFirstChild(name)
+    if not ev then ev = Instance.new("BindableFunction"); ev.Name = name; ev.Parent = JekyEvents end
     return ev
 end
 local function getOrCreateRF(name)
-    local ev = VandraEvents:FindFirstChild(name)
-    if not ev then ev = Instance.new("RemoteFunction"); ev.Name = name; ev.Parent = VandraEvents end
+    local ev = JekyEvents:FindFirstChild(name)
+    if not ev then ev = Instance.new("RemoteFunction"); ev.Name = name; ev.Parent = JekyEvents end
     return ev
 end
  
@@ -134,9 +134,9 @@ API_SetSkipMode.OnServerInvoke = function(player, skipMode)
 end
  
 local function getCheckpointFolder()
-    local vandra = workspace:FindFirstChild("AllPartSummitkitJeky")
-    if not vandra then return nil end
-    return vandra:FindFirstChild("Checkpoint")
+    local jeky = workspace:FindFirstChild("AllPartSummitkitJeky")
+    if not jeky then return nil end
+    return jeky:FindFirstChild("Checkpoint")
 end
  
 local function getCheckpointModel(checkpointId)

@@ -6,19 +6,19 @@ local JekyVerified = require(ServerStorage.JekyModules.JekyVerified)
 local JekyTitle    = require(ServerStorage.JekyModules.JekyTitle)
 local JekyConfig   = require(ServerStorage.JekyModules.JekyConfig)
 
-local VandraEvents = ReplicatedStorage:FindFirstChild("VandraEvents")
-if not VandraEvents then
-    VandraEvents = Instance.new("Folder")
-    VandraEvents.Name = "VandraEvents"
-    VandraEvents.Parent = ReplicatedStorage
+local JekyEvents = ReplicatedStorage:FindFirstChild("JekyEvents")
+if not JekyEvents then
+    JekyEvents = Instance.new("Folder")
+    JekyEvents.Name = "JekyEvents"
+    JekyEvents.Parent = ReplicatedStorage
 end
 
 local function getOrCreateRE(eventName)
-    local ev = VandraEvents:FindFirstChild(eventName)
+    local ev = JekyEvents:FindFirstChild(eventName)
     if not ev then
         ev = Instance.new("RemoteEvent")
         ev.Name = eventName
-        ev.Parent = VandraEvents
+        ev.Parent = JekyEvents
     end
     return ev
 end

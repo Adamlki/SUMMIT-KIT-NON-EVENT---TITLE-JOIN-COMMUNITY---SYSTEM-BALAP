@@ -21,20 +21,20 @@ INITIAL_FETCH_DELAY     = 3,
 RESET_FLUSH_DELAY       = 2,
 }
 
-local VandraEvents=ReplicatedStorage:WaitForChild("VandraEvents",CONFIG.WAIT_FOR_EVENTS_TIMEOUT)
-if not VandraEvents then return end
+local JekyEvents=ReplicatedStorage:WaitForChild("JekyEvents",CONFIG.WAIT_FOR_EVENTS_TIMEOUT)
+if not JekyEvents then return end
 
 local function getOrCreateRE(n)
-    local e=VandraEvents:FindFirstChild(n)
-    if not e then e=Instance.new("RemoteEvent"); e.Name=n; e.Parent=VandraEvents end; return e
+    local e=JekyEvents:FindFirstChild(n)
+    if not e then e=Instance.new("RemoteEvent"); e.Name=n; e.Parent=JekyEvents end; return e
     end
         local function getOrCreateBE(n)
-            local e=VandraEvents:FindFirstChild(n)
-            if not e then e=Instance.new("BindableEvent"); e.Name=n; e.Parent=VandraEvents end; return e
+            local e=JekyEvents:FindFirstChild(n)
+            if not e then e=Instance.new("BindableEvent"); e.Name=n; e.Parent=JekyEvents end; return e
             end
                 local function getOrCreateBF(n)
-                    local e=VandraEvents:FindFirstChild(n)
-                    if not e then e=Instance.new("BindableFunction"); e.Name=n; e.Parent=VandraEvents end; return e
+                    local e=JekyEvents:FindFirstChild(n)
+                    if not e then e=Instance.new("BindableFunction"); e.Name=n; e.Parent=JekyEvents end; return e
                     end
                         
                         local SR_Start        = getOrCreateRE("SR_Start")

@@ -54,7 +54,7 @@ local CurrentCheckpoint      = "BC"
 local LastNotifiedCheckpoint = nil
 local BCNotifiedThisRound    = false
 
-local VandraEvents
+local JekyEvents
 local CheckpointFolder
 
 local OriginalColors         = {}
@@ -230,9 +230,9 @@ local function setupGUI()
 end
 
 local function setupCheckpointFolder()
-    local vandra = workspace:WaitForChild("AllPartSummitkitJeky", 10)
-    if not vandra then return false end
-    CheckpointFolder = vandra:WaitForChild("Checkpoint", 5)
+    local jeky = workspace:WaitForChild("AllPartSummitkitJeky", 10)
+    if not jeky then return false end
+    CheckpointFolder = jeky:WaitForChild("Checkpoint", 5)
     if not CheckpointFolder then return false end
     return true
 end
@@ -354,10 +354,10 @@ local function playSound(soundId)
                     -- ============================================================
                     
                     local function setupRemoteEvents()
-                        VandraEvents = ReplicatedStorage:WaitForChild("VandraEvents", 10)
-                        if not VandraEvents then return false end
+                        JekyEvents = ReplicatedStorage:WaitForChild("JekyEvents", 10)
+                        if not JekyEvents then return false end
                         
-                        local cpUpdated = VandraEvents:WaitForChild("CP_CheckpointUpdated", 5)
+                        local cpUpdated = JekyEvents:WaitForChild("CP_CheckpointUpdated", 5)
                         if cpUpdated then
                             cpUpdated.OnClientEvent:Connect(function(checkpointId)
                                 CurrentCheckpoint = checkpointId
@@ -372,7 +372,7 @@ local function playSound(soundId)
                             end)
                         end
                         
-                        local cpTouched = VandraEvents:WaitForChild("CP_PlayerTouched", 5)
+                        local cpTouched = JekyEvents:WaitForChild("CP_PlayerTouched", 5)
                         if cpTouched then
                             cpTouched.OnClientEvent:Connect(function(data)
                                 local checkpointId = data.CheckpointId
@@ -416,7 +416,7 @@ local function playSound(soundId)
                             end)
                         end
                         
-                        local skippedWarning = VandraEvents:WaitForChild("CP_SkippedWarning", 5)
+                        local skippedWarning = JekyEvents:WaitForChild("CP_SkippedWarning", 5)
                         if skippedWarning then
                             skippedWarning.OnClientEvent:Connect(function(expectedCP)
                                 if not NotifFrame or not NotifLabel then return end
@@ -445,7 +445,7 @@ local function playSound(soundId)
                             end)
                         end
                         
-                        local colorUpdate = VandraEvents:WaitForChild("CP_PartColorUpdate", 5)
+                        local colorUpdate = JekyEvents:WaitForChild("CP_PartColorUpdate", 5)
                         if colorUpdate then
                             colorUpdate.OnClientEvent:Connect(function(checkpointId, colorType)
                                 if colorType == "visited"       then updatePartColor(checkpointId, true)
@@ -499,7 +499,7 @@ local function playSound(soundId)
                                 
                                 task.spawn(initialize)
                                 
-                                _G.VandraClientDebug = {
+                                _G.JekyClientDebug = {
                                 GetVisitedCheckpoints = function() return VisitedCheckpoints end,
                                     GetCurrentCheckpoint  = function() return CurrentCheckpoint end,
                                         TestNotif             = function(id) showNotif(id or "BC", 0, 0, 0) end,

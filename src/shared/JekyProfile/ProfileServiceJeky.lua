@@ -127,7 +127,7 @@ local function safeSet(store, key, value)
                 end
                 usernameWriteBusy[userId] = true
                 task.spawn(function()
-                    local store = getStore("VandraUsernameCache_v2")
+                    local store = getStore("JekyUsernameCache_v2")
                     if store and waitForWriteBudget(15) then
                         pcall(function() store:SetAsync("U_"..userId, name) end)
                             usernameWriteLast[userId] = os.time()
@@ -183,7 +183,7 @@ local function safeSet(store, key, value)
                     
                     usernameResolving[userId] = true
                     task.spawn(function()
-                        local store = getStore("VandraUsernameCache_v2")
+                        local store = getStore("JekyUsernameCache_v2")
                         if store then
                             local ok, name = pcall(function() return store:GetAsync("U_"..userId) end)
                                 if ok and name and name ~= "" then
@@ -423,7 +423,7 @@ local function safeSet(store, key, value)
                                 -- ============================================================
                                 -- 2. VIP
                                 -- ============================================================
-                                local VIP_STORE = "VandraVIP_v2"
+                                local VIP_STORE = "JekyVIP_v2"
                                 local vipCache  = {}
                                 local vipSnap   = {}
                                 local vipSaving = {}
@@ -464,7 +464,7 @@ local function safeSet(store, key, value)
                                         -- ============================================================
                                         -- 3. GLOBAL CONFIG
                                         -- ============================================================
-                                        local CFG_STORE = "VandraGlobalConfig_v1"
+                                        local CFG_STORE = "JekyGlobalConfig_v1"
                                         local cfgCache  = { SummitValue = 1, ApexValue = 2000, SkipCheckpoint = false }
                                         local cfgSnap   = { SummitValue = 1, ApexValue = 2000, SkipCheckpoint = false }
                                         local cfgSaving = false
@@ -664,8 +664,8 @@ local function safeSet(store, key, value)
                                                                         -- ============================================================
                                                                         -- 6. SPEEDRUN
                                                                         -- ============================================================
-                                                                        local SR_STORE    = "VandraSpeedRun_v1"
-                                                                        local SR_LB_STORE = "VandraGlobalSpeedRun_v1"
+                                                                        local SR_STORE    = "JekySpeedRun_v1"
+                                                                        local SR_LB_STORE = "JekyGlobalSpeedRun_v1"
                                                                         local srCache     = {}
                                                                         local srSaving    = {}
                                                                         PS.SpeedRun = {}

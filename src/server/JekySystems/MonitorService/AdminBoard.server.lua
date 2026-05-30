@@ -1,4 +1,4 @@
--- ServerScriptService / VandraAdminBoard
+-- ServerScriptService / JekyAdminBoard
 -- Requires: JekyTitle, JekyBoardConfiguration in ServerStorage/JekyModules
 
 local Players           = game:GetService("Players")

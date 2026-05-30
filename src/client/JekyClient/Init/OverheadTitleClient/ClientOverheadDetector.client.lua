@@ -31,8 +31,8 @@ local function waitForBillboard(character, maxWait)
         -- PERBAIKAN: Cari di Head, bukan di folder Overhead
         local head = character:FindFirstChild("Head")
         if head and isValid(head) then
-            -- Cari BillboardGui bernama "VandraOverhead" di dalam Head
-            local billboard = head:FindFirstChild("VandraOverhead")
+            -- Cari BillboardGui bernama "JekyOverhead" di dalam Head
+            local billboard = head:FindFirstChild("JekyOverhead")
             if billboard and isValid(billboard) and billboard:IsA("BillboardGui") then
                 local iconFrame = billboard:FindFirstChild("Icon")
                 if iconFrame and isValid(iconFrame) then
@@ -203,7 +203,7 @@ local function setupPlayerMonitoring(player)
     end
 end
 
--- Monitor for billboard recreation (when VandraOverhead is recreated in Head)
+-- Monitor for billboard recreation (when JekyOverhead is recreated in Head)
 local function monitorBillboardRecreation(player)
     if not player or not isValid(player) then
         return
@@ -225,18 +225,18 @@ local function monitorBillboardRecreation(player)
             return
         end
         
-        -- Monitor for VandraOverhead being added/changed in Head
+        -- Monitor for JekyOverhead being added/changed in Head
         pcall(function()
             head.ChildAdded:Connect(function(child)
-                if child.Name == "VandraOverhead" and isValid(child) and child:IsA("BillboardGui") then
+                if child.Name == "JekyOverhead" and isValid(child) and child:IsA("BillboardGui") then
                     task.wait(0.5) -- Wait for Icon frame to be added
                     updateIconVisibility(player)
                 end
             end)
         end)
         
-        -- Also check if VandraOverhead already exists
-        local existingBillboard = head:FindFirstChild("VandraOverhead")
+        -- Also check if JekyOverhead already exists
+        local existingBillboard = head:FindFirstChild("JekyOverhead")
         if existingBillboard and isValid(existingBillboard) then
             task.wait(0.5)
             updateIconVisibility(player)

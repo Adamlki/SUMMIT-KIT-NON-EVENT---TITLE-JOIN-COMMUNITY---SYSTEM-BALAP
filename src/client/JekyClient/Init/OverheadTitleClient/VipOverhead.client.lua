@@ -21,7 +21,7 @@ local function isValid(instance)
             if not character or not isValid(character) then return nil end
             local head = character:FindFirstChild("Head")
             if head and isValid(head) then
-                local billboard = head:FindFirstChild("VandraOverhead")
+                local billboard = head:FindFirstChild("JekyOverhead")
                 if billboard and isValid(billboard) and billboard:IsA("BillboardGui") then
                     local iconFrame = billboard:FindFirstChild("Icon")
                     if iconFrame and isValid(iconFrame) then
@@ -78,14 +78,14 @@ local function isValid(instance)
  
             pcall(function()
                 head.ChildAdded:Connect(function(child)
-                    if child.Name == "VandraOverhead" and isValid(child) and child:IsA("BillboardGui") then
+                    if child.Name == "JekyOverhead" and isValid(child) and child:IsA("BillboardGui") then
                         task.wait(0.5)
                         updateVipTitleForPlayer(targetPlayer)
                     end
                 end)
             end)
  
-            local existingBillboard = head:FindFirstChild("VandraOverhead")
+            local existingBillboard = head:FindFirstChild("JekyOverhead")
             if existingBillboard and isValid(existingBillboard) then
                 task.wait(0.5)
                 updateWithRetry(targetPlayer, 3)

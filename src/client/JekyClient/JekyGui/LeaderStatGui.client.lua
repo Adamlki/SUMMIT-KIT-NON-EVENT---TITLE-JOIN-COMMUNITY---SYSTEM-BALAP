@@ -1,4 +1,4 @@
--- StarterPlayerScripts / VandraListBoard  (LocalScript)
+-- StarterPlayerScripts / JekyListBoard  (LocalScript)
  
 local Players           = game:GetService("Players")
 local TweenService      = game:GetService("TweenService")
@@ -77,9 +77,9 @@ end
 -- ============================================================
 -- REMOTE EVENTS
 -- ============================================================
-local VandraEvents    = ReplicatedStorage:WaitForChild("VandraEvents", 15)
-local SR_UpdateMemory = VandraEvents and VandraEvents:WaitForChild("SR_UpdateMemory", 10) or nil
-local SR_Finish       = VandraEvents and VandraEvents:WaitForChild("SR_Finish",       10) or nil
+local JekyEvents    = ReplicatedStorage:WaitForChild("JekyEvents", 15)
+local SR_UpdateMemory = JekyEvents and JekyEvents:WaitForChild("SR_UpdateMemory", 10) or nil
+local SR_Finish       = JekyEvents and JekyEvents:WaitForChild("SR_Finish",       10) or nil
  
 -- ============================================================
 -- BESTTIME CACHE
@@ -146,10 +146,10 @@ local ROLE_ORDER = {
 "Admin","Moderator","Streamer","Community",
 }
 local ROLE_RULES = {
-Owner     = { UserIds = {},                          Usernames = { "pino18cm" } },
-Developer = { UserIds = {},                          Usernames = { "Caldweld123" } },
+Owner     = { UserIds = {},                          Usernames = { "adamzz3372" } },
+Developer = { UserIds = {},                          Usernames = { "" } },
 HeadAdmin = { UserIds = {},                          Usernames = { "" } },
-Admin     = { UserIds = { 22222, 2222222, 222222 },  Usernames = { "Teracarys","Admin2","Admin3" } },
+Admin     = { UserIds = {},                          Usernames = { "" } },
 Moderator = { UserIds = {},                          Usernames = { "" } },
 Streamer  = { UserIds = {},                          Usernames = { "" } },
 Community = { UserIds = {},                          Usernames = { "" } },

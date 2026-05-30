@@ -23,11 +23,11 @@ local JekyDataStore= require(JekyModules:WaitForChild("JekyDataStore"))
 -- ============================================================
 -- REMOTES SETUP
 -- ============================================================
-local VandraEvents = ReplicatedStorage:FindFirstChild("VandraEvents")
-if not VandraEvents then
-    VandraEvents        = Instance.new("Folder")
-    VandraEvents.Name   = "VandraEvents"
-    VandraEvents.Parent = ReplicatedStorage
+local JekyEvents = ReplicatedStorage:FindFirstChild("JekyEvents")
+if not JekyEvents then
+    JekyEvents        = Instance.new("Folder")
+    JekyEvents.Name   = "JekyEvents"
+    JekyEvents.Parent = ReplicatedStorage
 end
  
 local function getOrCreate(className, name, parent)
@@ -39,8 +39,8 @@ local function getOrCreate(className, name, parent)
     return obj
 end
  
-local AdminPanel_Command = getOrCreate("RemoteEvent", "AdminPanel_Command", VandraEvents)
-local AdminPanel_Result  = getOrCreate("RemoteEvent", "AdminPanel_Result",  VandraEvents)
+local AdminPanel_Command = getOrCreate("RemoteEvent", "AdminPanel_Command", JekyEvents)
+local AdminPanel_Result  = getOrCreate("RemoteEvent", "AdminPanel_Result",  JekyEvents)
  
 local SummitChatEvent = ReplicatedStorage:FindFirstChild("SummitChatEvent")
 if not SummitChatEvent then
@@ -88,9 +88,9 @@ end
 local INTERNAL_TO_MODEL = { Summit = "SUMMIT", ApexSummit = "BIGSUMMIT" }
  
 local function getCheckpointSpawn(checkpointId)
-    local vandra = workspace:FindFirstChild("AllPartSummitkitJeky")
-    if not vandra then return nil end
-    local cpFolder = vandra:FindFirstChild("Checkpoint")
+    local jeky = workspace:FindFirstChild("AllPartSummitkitJeky")
+    if not jeky then return nil end
+    local cpFolder = jeky:FindFirstChild("Checkpoint")
     if not cpFolder then return nil end
     
     local modelName = INTERNAL_TO_MODEL[checkpointId] or checkpointId
@@ -351,7 +351,7 @@ AdminPanel_Command.OnServerEvent:Connect(function(sender, cmdName, args)
                                     if btv and btv:IsA("StringValue") then btv.Value = "N/A" end
                                 end
                                 -- fire SR_UpdateMemory if available
-                                local VE = ReplicatedStorage:FindFirstChild("VandraEvents")
+                                local VE = ReplicatedStorage:FindFirstChild("JekyEvents")
                                 if VE then
                                     local srMem = VE:FindFirstChild("SR_UpdateMemory")
                                     if srMem then srMem:FireClient(tp, 0) end

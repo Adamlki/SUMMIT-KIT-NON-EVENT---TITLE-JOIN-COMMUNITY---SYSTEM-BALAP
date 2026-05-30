@@ -1,23 +1,23 @@
--- ServerScriptService/VandraSystems/OverheadTitleManager
+-- ServerScriptService/JekySystems/OverheadTitleManager
 local Players          = game:GetService("Players")
 local ServerStorage    = game:GetService("ServerStorage")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
  
 local JekyTitle = require(ServerStorage.JekyModules:WaitForChild("JekyTitle"))
  
-local VandraEvents = ReplicatedStorage:FindFirstChild("VandraEvents")
-if not VandraEvents then
-    VandraEvents = Instance.new("Folder")
-    VandraEvents.Name = "VandraEvents"
-    VandraEvents.Parent = ReplicatedStorage
+local JekyEvents = ReplicatedStorage:FindFirstChild("JekyEvents")
+if not JekyEvents then
+    JekyEvents = Instance.new("Folder")
+    JekyEvents.Name = "JekyEvents"
+    JekyEvents.Parent = ReplicatedStorage
 end
  
 local function getOrCreateRE(eventName)
-    local ev = VandraEvents:FindFirstChild(eventName)
+    local ev = JekyEvents:FindFirstChild(eventName)
     if not ev then
         ev = Instance.new("RemoteEvent")
         ev.Name = eventName
-        ev.Parent = VandraEvents
+        ev.Parent = JekyEvents
     end
     return ev
 end
@@ -31,7 +31,7 @@ local PlayerTitleCache = {}
 local updateThrottle   = {}
  
 local ADMIN_USER_IDS  = {}
-local ADMIN_USERNAMES = { "BukanYgDiaPilih", "kenn_justforu" }
+local ADMIN_USERNAMES = { "adamzz3372"}
  
 local function isAdmin(player)
     if not player then return false end

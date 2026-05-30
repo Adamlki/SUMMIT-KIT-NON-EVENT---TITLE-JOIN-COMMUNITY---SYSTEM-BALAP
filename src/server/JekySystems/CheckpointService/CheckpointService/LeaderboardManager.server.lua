@@ -22,13 +22,13 @@ FORCE_INITIAL_SYNC   = true,
 FORCE_SYNC_ON_SUMMIT = true,
 }
 
-local VandraEvents = ReplicatedStorage:WaitForChild("VandraEvents", CONFIG.TIMEOUT)
-if not VandraEvents then return end
+local JekyEvents = ReplicatedStorage:WaitForChild("JekyEvents", CONFIG.TIMEOUT)
+if not JekyEvents then return end
 
-local GetServerLB = VandraEvents:WaitForChild("CP_Internal_GetServerLB", CONFIG.TIMEOUT)
-local GetGlobalLB = VandraEvents:WaitForChild("CP_Internal_GetGlobalLB", CONFIG.TIMEOUT)
-local ServerLBEvt = VandraEvents:WaitForChild("CP_Internal_ServerLBUpdate", CONFIG.TIMEOUT)
-local GlobalLBEvt = VandraEvents:WaitForChild("CP_Internal_GlobalLBUpdate", CONFIG.TIMEOUT)
+local GetServerLB = JekyEvents:WaitForChild("CP_Internal_GetServerLB", CONFIG.TIMEOUT)
+local GetGlobalLB = JekyEvents:WaitForChild("CP_Internal_GetGlobalLB", CONFIG.TIMEOUT)
+local ServerLBEvt = JekyEvents:WaitForChild("CP_Internal_ServerLBUpdate", CONFIG.TIMEOUT)
+local GlobalLBEvt = JekyEvents:WaitForChild("CP_Internal_GlobalLBUpdate", CONFIG.TIMEOUT)
 if not (GetServerLB and GetGlobalLB and ServerLBEvt and GlobalLBEvt) then return end
 
 -- ============================================================

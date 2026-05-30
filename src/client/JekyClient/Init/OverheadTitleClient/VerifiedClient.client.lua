@@ -9,8 +9,8 @@ local LocalPlayer = Players.LocalPlayer
 -- ============================================================
 -- GET REMOTE EVENTS
 -- ============================================================
-local VandraEvents = ReplicatedStorage:WaitForChild("VandraEvents")
-local VS_UpdateVerifiedUI = VandraEvents:WaitForChild("VS_UpdateVerifiedUI")
+local JekyEvents = ReplicatedStorage:WaitForChild("JekyEvents")
+local VS_UpdateVerifiedUI = JekyEvents:WaitForChild("VS_UpdateVerifiedUI")
  
 -- ============================================================
 -- SAFE INSTANCE CHECK
@@ -44,7 +44,7 @@ local function waitForBillboard(character, maxWait)
         
         local head = character:FindFirstChild("Head")
         if head and isValid(head) then
-            local billboard = head:FindFirstChild("VandraOverhead")
+            local billboard = head:FindFirstChild("JekyOverhead")
             if billboard and isValid(billboard) and billboard:IsA("BillboardGui") then
                 local iconFrame = billboard:FindFirstChild("Icon")
                 if iconFrame and isValid(iconFrame) then
@@ -139,14 +139,14 @@ local function monitorPlayer(player)
         
         pcall(function()
             head.ChildAdded:Connect(function(child)
-                if child.Name == "VandraOverhead" and isValid(child) and child:IsA("BillboardGui") then
+                if child.Name == "JekyOverhead" and isValid(child) and child:IsA("BillboardGui") then
                     task.wait(0.5)
                     updateVerifiedIconForPlayer(player)
                 end
             end)
         end)
         
-        local existingBillboard = head:FindFirstChild("VandraOverhead")
+        local existingBillboard = head:FindFirstChild("JekyOverhead")
         if existingBillboard and isValid(existingBillboard) then
             task.wait(0.5)
             updateWithRetry(player, 3)

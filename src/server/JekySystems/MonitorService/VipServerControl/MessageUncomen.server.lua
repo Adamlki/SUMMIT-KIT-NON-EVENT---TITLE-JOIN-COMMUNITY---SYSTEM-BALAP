@@ -5,7 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage     = game:GetService("ServerStorage")
 local TextService       = game:GetService("TextService")
  
---// LOAD VANDRA TITLE
+--// LOAD JEKY TITLE
 local JekyTitle = require(
 ServerStorage:WaitForChild("JekyModules"):WaitForChild("JekyTitle")
 )

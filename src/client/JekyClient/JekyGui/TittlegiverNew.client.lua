@@ -11,7 +11,7 @@ if not table.find(ADMINS, Player.Name) then return end
 local playerGui = Player:WaitForChild("PlayerGui")
 
 -- Langsung tunggu ListGui di luar, karena wujud aslinya memang ada di luar
-local listGui = playerGui:WaitForChild("ListGui")
+local listGui = playerGui:WaitForChild("ListGui", 5)
 
 local toggleBtn = listGui:WaitForChild("TitleButton")
 toggleBtn.Visible = true
