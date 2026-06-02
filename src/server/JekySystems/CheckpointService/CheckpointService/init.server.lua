@@ -55,6 +55,7 @@ local CP_PlayerTouched           = getOrCreateRE("CP_PlayerTouched")
 local CP_PartColorUpdate         = getOrCreateRE("CP_PartColorUpdate")
 local CP_RequestResetToBC        = getOrCreateRE("CP_RequestResetToBC")
 local CP_SkippedWarning          = getOrCreateRE("CP_SkippedWarning")
+local CP_RequestTeleportToLastCP = getOrCreateRE("CP_RequestTeleportToLastCP")
 local CP_Internal_ServerLBUpdate = getOrCreateBE("CP_Internal_ServerLBUpdate")
 local CP_Internal_GlobalLBUpdate = getOrCreateBE("CP_Internal_GlobalLBUpdate")
 local CP_Internal_GetServerLB    = getOrCreateBF("CP_Internal_GetServerLB")
@@ -613,64 +614,22 @@ end
                 end
             end
             
-            local function setupTeleportSystem()
-                local summitkitFolder = workspace:FindFirstChild("AllPartSummitkitJeky")
-                if not summitkitFolder then return end
-                local tpFolder = summitkitFolder:FindFirstChild("TeleportPart")
-                if not tpFolder then return end
-                
-                -- DO NOT auto-set transparency on TeleportPart parts
-                
-                local function onTeleportTouch(tpPart, hit)
-    local character = hit.Parent
-    if not character or not character:IsA("Model") then return end
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    if not humanoid or humanoid.Health <= 0 then return end
-    local player = Players:GetPlayerFromCharacter(character)
-    if not player then return end
-    
-    local uid = player.UserId
-    local now = os.clock()
-    if PlayerSpawnImmunity[uid] and now < PlayerSpawnImmunity[uid] then return end
-    if PlayerLastTouch[uid] and (now - PlayerLastTouch[uid]) < TELEPORT_TOUCH_COOLDOWN then return end
-    PlayerLastTouch[uid] = now
-    
-    -- Cek berlapis: cari apakah nama part atau nama Parent/Folder di atasnya mengandung kata "backbc"
-    local isBackBC = false
-    local currentObj = tpPart
-    while currentObj and currentObj ~= workspace do
-        if string.find(string.lower(currentObj.Name), "backbc") then
-            isBackBC = true
-            break
-        end
-        currentObj = currentObj.Parent
-    end
-
-    if isBackBC then
-        -- Jika objek atau parent-nya bernama BackBC, reset ke BC persis seperti GUI Button
-        resetAndTeleportToBC(player)
-    else
-        -- Jika ini part teleport biasa, pindahkan ke Destinasi checkpoint saat ini
-        local cpLS = ensureLeaderstats(player)
-        local currentCP = cpLS.Value
-        if player.Character then
-            teleportToCheckpoint(player.Character, currentCP)
-        end
-    end
-end
-                
-                for _, part in ipairs(tpFolder:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanTouch = true
-                        part.Touched:Connect(function(hit) onTeleportTouch(part, hit) end)
-                        end
-                        end
-                        end
+            -- setupTeleportSystem dihapus dari Server, sekarang dipindah ke Client (CheckpointClient)
+            -- untuk mencegah bug teleport karena lag / server delay.
                             
                             
                             -- Handler: client minta reset ke BC via GUI
                             CP_RequestResetToBC.OnServerEvent:Connect(function(player)
                                 resetAndTeleportToBC(player)
+                            end)
+
+                            -- Handler: client menyentuh part Teleport (killbrick) di layarnya
+                            CP_RequestTeleportToLastCP.OnServerEvent:Connect(function(player)
+                                local cpLS = ensureLeaderstats(player)
+                                local currentCP = cpLS.Value
+                                if player.Character then
+                                    teleportToCheckpoint(player.Character, currentCP)
+                                end
                             end)
                             
                             Players.PlayerAdded:Connect(function(player)
@@ -945,11 +904,19 @@ end
                                                                                     task.spawn(updateServerLeaderboard)
                                                                                 end)
                                                                                 
+                                                                                local ReplicatedStorage = game:GetService("ReplicatedStorage")
+                                                                                local Event = ReplicatedStorage:FindFirstChild("CP_RequestTeleportToLastCP") or Instance.new("RemoteEvent", ReplicatedStorage); Event.Name = "CP_RequestTeleportToLastCP"
+                                                                                Event.OnServerEvent:Connect(function(player)
+                                                                                    local character = player.Character
+                                                                                    if character and PlayerRespawnLocation[player.UserId] then
+                                                                                        teleportToCheckpoint(character, PlayerRespawnLocation[player.UserId])
+                                                                                    end
+                                                                                end)
+                                                                                
                                                                                 task.spawn(function()
                                                                                     workspace:WaitForChild("AllPartSummitkitJeky", 30)
                                                                                     task.wait(1)
                                                                                     setupCheckpointSystem()
-                                                                                    setupTeleportSystem()
                                                                                     task.wait(2)
                                                                                     updateServerLeaderboard()
                                                                                     updateGlobalLeaderboard()

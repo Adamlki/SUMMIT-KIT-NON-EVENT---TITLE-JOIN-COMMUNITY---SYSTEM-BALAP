@@ -4,7 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
  
 local player = Players.LocalPlayer
  
-local UpdateVipStatus = ReplicatedStorage:WaitForChild("UpdateVipStatus", 10)
+local UpdateVipStatus = ReplicatedStorage:WaitForChild("UpdateVipStatus", 999)
  
 local function isValid(instance)
     if not instance then return false end
@@ -72,7 +72,7 @@ local function isValid(instance)
             if not character or not isValid(character) then return end
             local head = character:FindFirstChild("Head")
             if not head or not isValid(head) then
-                head = character:WaitForChild("Head", 5)
+                head = character:WaitForChild("Head", 999)
             end
             if not head or not isValid(head) then return end
  

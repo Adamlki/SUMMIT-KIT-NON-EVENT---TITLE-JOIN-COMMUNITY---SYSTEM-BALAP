@@ -10,7 +10,7 @@ local playerGui = player:WaitForChild("PlayerGui")
 -- ============================================
 -- CONFIGURATION
 -- ============================================
-local GAME_NAME        = "MOUNT ARVENIX"
+local GAME_NAME        = "MOUNT IGNIVALE"
 local NOTIFY_SOUND_ID  = "rbxassetid://126960584587035" -- Ganti dengan Sound ID milikmu
 local NOTIFY_DURATION  = 3   -- detik frame tampil
 local NOTIFY_INTERVAL  = 0.5 -- jeda antar notifikasi dalam antrian
@@ -68,14 +68,14 @@ local function setupRemotes()
     GetDonationPackagesRF = ReplicatedStorage:FindFirstChild("Donation_GetPackages")
     if not GetDonationPackagesRF then
         pcall(function()
-            GetDonationPackagesRF = ReplicatedStorage:WaitForChild("Donation_GetPackages", 5)
+            GetDonationPackagesRF = ReplicatedStorage:WaitForChild("Donation_GetPackages", 999)
         end)
     end
     
     PurchaseDonationRE = ReplicatedStorage:FindFirstChild("Donation_Purchase")
     if not PurchaseDonationRE then
         pcall(function()
-            PurchaseDonationRE = ReplicatedStorage:WaitForChild("Donation_Purchase", 5)
+            PurchaseDonationRE = ReplicatedStorage:WaitForChild("Donation_Purchase", 999)
         end)
     end
     

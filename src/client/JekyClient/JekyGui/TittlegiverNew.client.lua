@@ -16,7 +16,7 @@ local isAdmin = JekyConfig.IsAdmin(Player.UserId, Player.Name)
 local playerGui = Player:WaitForChild("PlayerGui")
 
 -- Cek ListGui dan tombol toggle
-local listGui = playerGui:WaitForChild("ListGui", 10)
+local listGui = playerGui:WaitForChild("ListGui", 999)
 if not listGui then
     debugWarn("[TittlegiverNew] ListGui tidak ditemukan di PlayerGui!")
     return
@@ -144,7 +144,7 @@ end
 -- =========================================================
 -- MENGHUBUNGKAN VARIABEL KE GUI YANG SUDAH DIBUAT
 -- =========================================================
-local titlePanel = playerGui:WaitForChild("TitlePanel", 10)
+local titlePanel = playerGui:WaitForChild("TitlePanel", 999)
 if not titlePanel then
     debugWarn("[TittlegiverNew] UI TitlePanel_V3 tidak ditemukan! Pastikan GUI sudah ada di StarterGui.")
     return

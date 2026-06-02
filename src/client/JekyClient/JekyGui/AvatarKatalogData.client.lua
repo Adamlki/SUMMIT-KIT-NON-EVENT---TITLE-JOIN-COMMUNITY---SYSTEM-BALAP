@@ -287,8 +287,8 @@ end
 local function initializeSystem()
     if not waitForElements() then return end
     
-    ChangeAvatarEvent = ReplicatedStorage:WaitForChild("ChangeAvatarEvent", 10)
-    ResetAvatarEvent = ReplicatedStorage:WaitForChild("ResetAvatarEvent", 10)
+    ChangeAvatarEvent = ReplicatedStorage:WaitForChild("ChangeAvatarEvent", 999)
+    ResetAvatarEvent = ReplicatedStorage:WaitForChild("ResetAvatarEvent", 999)
     
     if not ChangeAvatarEvent or not ResetAvatarEvent then return end
     

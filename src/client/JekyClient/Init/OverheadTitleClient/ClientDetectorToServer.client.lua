@@ -13,7 +13,7 @@ local LocalPlayer = Players.LocalPlayer
 local function waitForCamera()
     local camera = workspace.CurrentCamera
     if not camera then
-        camera = workspace:WaitForChild("Camera", 10)
+        camera = workspace:WaitForChild("Camera", 999)
     end
     
     local maxWait = 50
@@ -161,7 +161,7 @@ local function detectDeviceType()
         -- PART 2: REPORT TO SERVER
         -- ============================================
         
-        local ReportDeviceEvent = ReplicatedStorage:WaitForChild("ReportDeviceType", 5)
+        local ReportDeviceEvent = ReplicatedStorage:WaitForChild("ReportDeviceType", 999)
         
         local function reportToServer(deviceType)
             if not ReportDeviceEvent then
@@ -179,7 +179,7 @@ local function detectDeviceType()
         -- PART 3: LISTEN FOR OTHER PLAYERS' DEVICES
         -- ============================================
         
-        local DeviceChangedEvent = ReplicatedStorage:WaitForChild("DeviceChanged", 5)
+        local DeviceChangedEvent = ReplicatedStorage:WaitForChild("DeviceChanged", 999)
         local deviceCache = {}
         
         -- Update device cache

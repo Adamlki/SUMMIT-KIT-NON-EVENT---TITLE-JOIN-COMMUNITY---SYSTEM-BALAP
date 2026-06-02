@@ -222,7 +222,7 @@ local function monitorBillboardRecreation(player)
         local head = character:FindFirstChild("Head")
         if not head or not isValid(head) then
             -- Wait for Head if not found yet
-            head = character:WaitForChild("Head", 5)
+            head = character:WaitForChild("Head", 999)
         end
         
         if not head or not isValid(head) then

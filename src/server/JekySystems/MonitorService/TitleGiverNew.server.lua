@@ -12,6 +12,14 @@ ApplyEvent.Parent = RS
 
 local TitleGiver = RS:WaitForChild("TitleGiver")
 
+local EventTitleClaim = RS:FindFirstChild("EventTitleClaim") or Instance.new("RemoteEvent")
+EventTitleClaim.Name = "EventTitleClaim"
+EventTitleClaim.Parent = RS
+
+local EventTitlePreview = RS:FindFirstChild("EventTitlePreview") or Instance.new("RemoteEvent")
+EventTitlePreview.Name = "EventTitlePreview"
+EventTitlePreview.Parent = RS
+
 -- Memanggil module JekyConfig untuk cek akses Admin
 local JekyConfig = require(ServerStorage:WaitForChild("JekyModules"):WaitForChild("JekyConfig"))
 
@@ -217,6 +225,84 @@ ApplyEvent.OnServerEvent:Connect(function(sender, data)
 	end
 	safeSave(target.UserId, existing)
 	applyTitle(target, existing)
+end)
+
+local LINE_REQUIREMENTS = {
+	[1] = 50,
+	[2] = 200,
+	[3] = 600,
+	[4] = 2000
+}
+
+EventTitleClaim.OnServerEvent:Connect(function(player, action, lineIdx, data)
+	if action == "GetStatus" then
+		local existing = loadTitle(player.UserId)
+		local status = {
+			[1] = existing.ClaimedL1 or false,
+			[2] = existing.ClaimedL2 or false,
+			[3] = existing.ClaimedL3 or false,
+			[4] = existing.ClaimedL4 or false,
+		}
+		EventTitleClaim:FireClient(player, "Status", status)
+		return
+	elseif action == "Claim" then
+		if type(lineIdx) ~= "number" or type(data) ~= "table" then return end
+		
+		local reqSummit = LINE_REQUIREMENTS[lineIdx]
+		if not reqSummit then return end
+		
+		local ls = player:FindFirstChild("leaderstats")
+		if not ls then return end
+		local summitVal = ls:FindFirstChild("Summit")
+		if not summitVal then return end
+		
+		if summitVal.Value < reqSummit then
+			EventTitleClaim:FireClient(player, "ClaimResult", false, "Belum memenuhi syarat " .. reqSummit .. " Summit.")
+			return
+		end
+		
+		local existing = loadTitle(player.UserId)
+		local claimKey = "ClaimedL" .. lineIdx
+		if existing[claimKey] then
+			EventTitleClaim:FireClient(player, "ClaimResult", false, "Line ini sudah di claim!")
+			return
+		end
+		
+		existing["T" .. lineIdx] = data.Text or ""
+		existing["M" .. lineIdx] = data.Mode or "PRESET"
+		existing["P" .. lineIdx] = data.Preset or 1
+		existing["A" .. lineIdx] = data.Anim or 1
+		existing["S" .. lineIdx] = data.Solid or 1
+		existing[claimKey] = true
+		
+		safeSave(player.UserId, existing)
+		applyTitle(player, existing)
+		
+		EventTitleClaim:FireClient(player, "ClaimResult", true, "Berhasil claim title line " .. lineIdx .. "!", lineIdx)
+	end
+end)
+
+EventTitlePreview.OnServerEvent:Connect(function(player, lineIdx, data)
+	if type(lineIdx) ~= "number" or type(data) ~= "table" then return end
+	
+	local previewData = {}
+	local existing = loadTitle(player.UserId)
+	for k, v in pairs(existing) do previewData[k] = v end
+	
+	previewData["T" .. lineIdx] = data.Text or ""
+	previewData["M" .. lineIdx] = data.Mode or "PRESET"
+	previewData["P" .. lineIdx] = data.Preset or 1
+	previewData["A" .. lineIdx] = data.Anim or 1
+	previewData["S" .. lineIdx] = data.Solid or 1
+	
+	applyTitle(player, previewData)
+	
+	task.wait(5)
+	
+	if player and player.Parent then
+		applyTitle(player, loadTitle(player.UserId))
+		EventTitlePreview:FireClient(player, "PreviewDone")
+	end
 end)
 
 local function autoLoad(p)

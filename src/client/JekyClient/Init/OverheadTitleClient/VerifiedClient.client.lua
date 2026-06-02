@@ -130,7 +130,7 @@ local function monitorPlayer(player)
         
         local head = character:FindFirstChild("Head")
         if not head or not isValid(head) then
-            head = character:WaitForChild("Head", 5)
+            head = character:WaitForChild("Head", 999)
         end
         
         if not head or not isValid(head) then

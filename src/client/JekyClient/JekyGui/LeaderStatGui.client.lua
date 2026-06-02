@@ -17,8 +17,8 @@ end
 local PlayerGui       = LocalPlayer:WaitForChild("PlayerGui")
 
 -- Tambahkan angka 10 (artinya script bersedia menunggu maksimal 10 detik)
-local ListGui         = PlayerGui:WaitForChild("ListGui", 10)
-local IsiGui          = PlayerGui:WaitForChild("IsiGui", 10)
+local ListGui         = PlayerGui:WaitForChild("ListGui", 999)
+local IsiGui          = PlayerGui:WaitForChild("IsiGui", 999)
 
 -- Cegah error lanjutan jika UI ternyata benar-benar hilang/terhapus
 if not ListGui or not IsiGui then
@@ -26,11 +26,11 @@ if not ListGui or not IsiGui then
 	return -- Hentikan script agar tidak error beruntun
 end
 
-local ListTopBarKanan = ListGui:WaitForChild("ListTopBarKanan", 5)
-local ListButton      = ListTopBarKanan:WaitForChild("ListButton", 5)
-local ListPlayer      = IsiGui:WaitForChild("ListPlayer", 5)
-local ScrollingFrame  = ListPlayer:WaitForChild("ScrollingFrame", 5)
-local Template        = ScrollingFrame:WaitForChild("Frame", 5)
+local ListTopBarKanan = ListGui:WaitForChild("ListTopBarKanan", 999)
+local ListButton      = ListTopBarKanan:WaitForChild("ListButton", 999)
+local ListPlayer      = IsiGui:WaitForChild("ListPlayer", 999)
+local ScrollingFrame  = ListPlayer:WaitForChild("ScrollingFrame", 999)
+local Template        = ScrollingFrame:WaitForChild("Frame", 999)
 
 Template.Visible = false
  
@@ -59,8 +59,8 @@ end)
 -- REMOTE EVENTS
 -- ============================================================
 local JekyEvents    = ReplicatedStorage:WaitForChild("JekyEvents", 15)
-local SR_UpdateMemory = JekyEvents and JekyEvents:WaitForChild("SR_UpdateMemory", 10) or nil
-local SR_Finish       = JekyEvents and JekyEvents:WaitForChild("SR_Finish",       10) or nil
+local SR_UpdateMemory = JekyEvents and JekyEvents:WaitForChild("SR_UpdateMemory", 999) or nil
+local SR_Finish       = JekyEvents and JekyEvents:WaitForChild("SR_Finish", 999) or nil
  
 -- ============================================================
 -- BESTTIME CACHE

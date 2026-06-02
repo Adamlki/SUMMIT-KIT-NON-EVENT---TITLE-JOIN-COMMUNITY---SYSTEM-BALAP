@@ -448,88 +448,29 @@ end
 local function waitForElements()
     if DEBUG_MODE then print("[EmoteSystem] Looking for GUI elements...") end
     
-    local attempts = 0
-    while attempts < 50 do
-        -- Find ListGui elements
-        ListGui = playerGui:FindFirstChild("ListGui")
-        
-        if ListGui then
-            if DEBUG_MODE then print("[EmoteSystem] Found ListGui") end
-            
-            ListTopBar = ListGui:FindFirstChild("ListTopBar")
-            
-            if ListTopBar then
-                if DEBUG_MODE then print("[EmoteSystem] Found ListTopBar") end
-                
-                EmoteButton = ListTopBar:FindFirstChild("EmoteButton")
-                
-                if EmoteButton then
-                    if DEBUG_MODE then print("[EmoteSystem] Found EmoteButton") end
-                end
-            end
-        end
-        
-        -- Find IsiGui elements
-        IsiGui = playerGui:FindFirstChild("IsiGui")
-        
-        if IsiGui then
-            if DEBUG_MODE then print("[EmoteSystem] Found IsiGui") end
-            
-            EmotePanel = IsiGui:FindFirstChild("EmotePanel")
-            
-            if EmotePanel then
-                if DEBUG_MODE then print("[EmoteSystem] Found EmotePanel") end
-                
-                ScrollingFrame = EmotePanel:FindFirstChild("ScrollingFrame")
-                EmoteListButton = EmotePanel:FindFirstChild("EmoteButton")
-                DanceListButton = EmotePanel:FindFirstChild("DanceButton")
-                SearchBox = EmotePanel:FindFirstChild("TextBox")
-                CloseButton = EmotePanel:FindFirstChild("CloseButton")
-                SpeedBar = EmotePanel:FindFirstChild("SpeedBar")
-                
-                if ScrollingFrame then
-                    if DEBUG_MODE then print("[EmoteSystem] Found ScrollingFrame") end
-                    
-                    TemplateButton = ScrollingFrame:FindFirstChild("Button")
-                    
-                    if TemplateButton then
-                        if DEBUG_MODE then print("[EmoteSystem] Found Template Button") end
-                        TemplateButton.Visible = false
-                    end
-                end
-                
-                if SpeedBar then
-                    if DEBUG_MODE then print("[EmoteSystem] Found SpeedBar") end
-                    
-                    SpeedSlider = SpeedBar:FindFirstChild("SpeedSlider")
-                    
-                    if SpeedSlider then
-                        if DEBUG_MODE then print("[EmoteSystem] Found SpeedSlider") end
-                    end
-                end
-                
-                if SearchBox then
-                    SearchButton = SearchBox:FindFirstChild("Button")
-                    if SearchButton then
-                        if DEBUG_MODE then print("[EmoteSystem] Found SearchButton") end
-                    end
-                end
-                
-                -- Check if all elements found
-                if ScrollingFrame and TemplateButton and EmoteListButton and 
-                    DanceListButton and SearchBox and CloseButton and 
-                    SpeedBar and SpeedSlider and EmoteButton then
-                    return true
-                end
-            end
-        end
-        
-        attempts = attempts + 1
-        task.wait(0.1)
-    end
+    ListGui = playerGui:WaitForChild("ListGui", 999)
+    if not ListGui then return false end
     
-    if DEBUG_MODE then warn("[EmoteSystem] Failed to find all GUI elements!") end
-    return false
+    ListTopBar = ListGui:WaitForChild("ListTopBar", 999)
+    EmoteButton = ListTopBar:WaitForChild("EmoteButton", 999)
+    
+    IsiGui = playerGui:WaitForChild("IsiGui", 999)
+    EmotePanel = IsiGui:WaitForChild("EmotePanel", 999)
+    
+    ScrollingFrame = EmotePanel:WaitForChild("ScrollingFrame", 999)
+    EmoteListButton = EmotePanel:WaitForChild("EmoteButton", 999)
+    DanceListButton = EmotePanel:WaitForChild("DanceButton", 999)
+    SearchBox = EmotePanel:WaitForChild("TextBox", 999)
+    CloseButton = EmotePanel:WaitForChild("CloseButton", 999)
+    SpeedBar = EmotePanel:WaitForChild("SpeedBar", 999)
+    
+    TemplateButton = ScrollingFrame:WaitForChild("Button", 999)
+    TemplateButton.Visible = false
+    
+    SpeedSlider = SpeedBar:WaitForChild("SpeedSlider", 999)
+    SearchButton = SearchBox:WaitForChild("Button", 999)
+    
+    return true
 end
  
 -- ============================================

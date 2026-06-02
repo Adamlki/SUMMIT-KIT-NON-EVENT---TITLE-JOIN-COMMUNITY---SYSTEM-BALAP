@@ -97,7 +97,7 @@ local function cleanupDuplicates(character)
                 if not character or not character.Parent then return nil end
                 cleanupDuplicates(character)
                 local head = character:FindFirstChild("Head")
-                if not head then head = character:WaitForChild("Head", 3) end
+                if not head then head = character:WaitForChild("Head", 999) end
                 if not head then return nil end
                 local bill = TEMPLATE:Clone()
                 bill.Name = "JekyOverhead"
@@ -380,7 +380,7 @@ local function cleanupDuplicates(character)
                         connections = {}
                         cleanupDuplicates(char)
  
-                        local head = char:WaitForChild("Head", 3)
+                        local head = char:WaitForChild("Head", 999)
                         if not head then return end
  
                         task.wait(0.3)

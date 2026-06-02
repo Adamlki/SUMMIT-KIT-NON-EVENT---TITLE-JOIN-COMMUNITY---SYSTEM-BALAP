@@ -60,6 +60,8 @@ local CheckpointFolder
 local OriginalColors         = {}
 local OriginalParticleColors = {}
 
+local LastTpTouch            = 0
+
 -- ============================================================
 -- SCREEN SHAKE (gerak NotifFrame, bukan kamera)
 -- ============================================================
@@ -215,10 +217,10 @@ end
 -- ============================================================
 
 local function setupGUI()
-    SummitGUI = PlayerGui:WaitForChild("SummitGUI", 10)
+    SummitGUI = PlayerGui:WaitForChild("SummitGUI", 999)
     if not SummitGUI then return false end
     
-    NotifFrame = SummitGUI:WaitForChild("NotifCp", 5)
+    NotifFrame = SummitGUI:WaitForChild("NotifCp", 999)
     if NotifFrame then
         NotifLabel = NotifFrame:FindFirstChild("NotifLabel")
         AngkaLabel = NotifFrame:FindFirstChild("AngkaLabel")
@@ -230,9 +232,9 @@ local function setupGUI()
 end
 
 local function setupCheckpointFolder()
-    local jeky = workspace:WaitForChild("AllPartSummitkitJeky", 10)
+    local jeky = workspace:WaitForChild("AllPartSummitkitJeky", 999)
     if not jeky then return false end
-    CheckpointFolder = jeky:WaitForChild("Checkpoint", 5)
+    CheckpointFolder = jeky:WaitForChild("Checkpoint", 999)
     if not CheckpointFolder then return false end
     return true
 end
@@ -354,10 +356,10 @@ local function playSound(soundId)
                     -- ============================================================
                     
                     local function setupRemoteEvents()
-                        JekyEvents = ReplicatedStorage:WaitForChild("JekyEvents", 10)
+                        JekyEvents = ReplicatedStorage:WaitForChild("JekyEvents", 999)
                         if not JekyEvents then return false end
                         
-                        local cpUpdated = JekyEvents:WaitForChild("CP_CheckpointUpdated", 5)
+                        local cpUpdated = JekyEvents:WaitForChild("CP_CheckpointUpdated", 999)
                         if cpUpdated then
                             cpUpdated.OnClientEvent:Connect(function(checkpointId)
                                 CurrentCheckpoint = checkpointId
@@ -372,7 +374,7 @@ local function playSound(soundId)
                             end)
                         end
                         
-                        local cpTouched = JekyEvents:WaitForChild("CP_PlayerTouched", 5)
+                        local cpTouched = JekyEvents:WaitForChild("CP_PlayerTouched", 999)
                         if cpTouched then
                             cpTouched.OnClientEvent:Connect(function(data)
                                 local checkpointId = data.CheckpointId
@@ -416,7 +418,7 @@ local function playSound(soundId)
                             end)
                         end
                         
-                        local skippedWarning = JekyEvents:WaitForChild("CP_SkippedWarning", 5)
+                        local skippedWarning = JekyEvents:WaitForChild("CP_SkippedWarning", 999)
                         if skippedWarning then
                             skippedWarning.OnClientEvent:Connect(function(expectedCP)
                                 if not NotifFrame or not NotifLabel then return end
@@ -445,7 +447,7 @@ local function playSound(soundId)
                             end)
                         end
                         
-                        local colorUpdate = JekyEvents:WaitForChild("CP_PartColorUpdate", 5)
+                        local colorUpdate = JekyEvents:WaitForChild("CP_PartColorUpdate", 999)
                         if colorUpdate then
                             colorUpdate.OnClientEvent:Connect(function(checkpointId, colorType)
                                 if colorType == "visited"       then updatePartColor(checkpointId, true)
@@ -459,13 +461,66 @@ local function playSound(soundId)
                                 end
                                 
                                 -- ============================================================
+                                -- TELEPORT SYSTEM (CLIENT-SIDED TO PREVENT LAG BUGS)
+                                -- ============================================================
+                                
+                                local function setupTeleportSystem()
+                                    local summitkitFolder = workspace:WaitForChild("AllPartSummitkitJeky", 999)
+                                    if not summitkitFolder then return end
+                                    local tpFolder = summitkitFolder:WaitForChild("TeleportPart", 999)
+                                    if not tpFolder then return end
+                                    
+                                    local function onTeleportTouch(tpPart, hit)
+                                        local character = hit.Parent
+                                        if character ~= LocalPlayer.Character then return end
+                                        
+                                        local now = os.clock()
+                                        if (now - LastTpTouch) < 0.5 then return end
+                                        LastTpTouch = now
+                                        
+                                        local isBackBC = false
+                                        local currentObj = tpPart
+                                        while currentObj and currentObj ~= workspace do
+                                            if string.find(string.lower(currentObj.Name), "backbc") then
+                                                isBackBC = true
+                                                break
+                                            end
+                                            currentObj = currentObj.Parent
+                                        end
+                                        
+                                        if isBackBC then
+                                            local req = JekyEvents:FindFirstChild("CP_RequestResetToBC")
+                                            if req then req:FireServer() end
+                                        else
+                                            local req = JekyEvents:FindFirstChild("CP_RequestTeleportToLastCP")
+                                            if req then req:FireServer() end
+                                        end
+                                    end
+                                    
+                                    local function bindTeleportPart(part)
+                                        if part:IsA("BasePart") then
+                                            part.CanTouch = true
+                                            part.Touched:Connect(function(hit) onTeleportTouch(part, hit) end)
+                                        end
+                                    end
+                                    
+                                    for _, part in ipairs(tpFolder:GetDescendants()) do
+                                        bindTeleportPart(part)
+                                    end
+                                    
+                                    tpFolder.DescendantAdded:Connect(function(part)
+                                        bindTeleportPart(part)
+                                    end)
+                                end
+                                
+                                -- ============================================================
                                 -- LEADERSTATS MONITOR
                                 -- ============================================================
                                 
                                 local function monitorLeaderstats()
-                                    local leaderstats = LocalPlayer:WaitForChild("leaderstats", 10)
+                                    local leaderstats = LocalPlayer:WaitForChild("leaderstats", 999)
                                     if not leaderstats then return end
-                                    local checkpoint = leaderstats:WaitForChild("Checkpoint", 5)
+                                    local checkpoint = leaderstats:WaitForChild("Checkpoint", 999)
                                     if checkpoint then
                                         checkpoint.Changed:Connect(function(newValue)
                                             CurrentCheckpoint = newValue
@@ -487,6 +542,8 @@ local function playSound(soundId)
                                     if not setupGUI() then return end
                                     if not setupCheckpointFolder() then return end
                                     if not setupRemoteEvents() then return end
+                                    
+                                    setupTeleportSystem()
                                     
                                     setupBillboardLabels()
                                     

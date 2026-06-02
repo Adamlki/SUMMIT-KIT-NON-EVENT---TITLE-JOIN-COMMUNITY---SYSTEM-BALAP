@@ -263,7 +263,7 @@ end
 local function initializeSystem()
     if not waitForElements() then return end
     
-    AuraPack = ReplicatedStorage:WaitForChild("AuraPack", 10)
+    AuraPack = ReplicatedStorage:WaitForChild("AuraPack", 999)
     if not AuraPack then return end
     
     for _, auraModel in ipairs(AuraPack:GetChildren()) do
@@ -272,11 +272,11 @@ local function initializeSystem()
         end
     end
     
-    GetOwnedAurasRF = ReplicatedStorage:WaitForChild("Aura_GetOwnedAuras", 10)
-    GetEquippedAuraRF = ReplicatedStorage:WaitForChild("Aura_GetEquippedAura", 10)
-    ApplyAuraRE = ReplicatedStorage:WaitForChild("Aura_Apply", 10)
-    HideAuraRE = ReplicatedStorage:WaitForChild("Aura_Hide", 10)
-    AuraDataUpdatedRE = ReplicatedStorage:WaitForChild("Aura_DataUpdated", 10)
+    GetOwnedAurasRF = ReplicatedStorage:WaitForChild("Aura_GetOwnedAuras", 999)
+    GetEquippedAuraRF = ReplicatedStorage:WaitForChild("Aura_GetEquippedAura", 999)
+    ApplyAuraRE = ReplicatedStorage:WaitForChild("Aura_Apply", 999)
+    HideAuraRE = ReplicatedStorage:WaitForChild("Aura_Hide", 999)
+    AuraDataUpdatedRE = ReplicatedStorage:WaitForChild("Aura_DataUpdated", 999)
     
     if not GetOwnedAurasRF or not ApplyAuraRE or not HideAuraRE then return end
     

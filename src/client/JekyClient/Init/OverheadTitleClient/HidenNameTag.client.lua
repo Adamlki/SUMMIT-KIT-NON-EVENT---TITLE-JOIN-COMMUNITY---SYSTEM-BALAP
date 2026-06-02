@@ -4,7 +4,7 @@
 local Players = game:GetService("Players")
 
 local function hideNameTag(character)
-    local humanoid = character:WaitForChild("Humanoid", 5)
+    local humanoid = character:WaitForChild("Humanoid", 999)
     if humanoid then
         humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
     end
