@@ -470,32 +470,43 @@ local function playSound(soundId)
                                     local tpFolder = summitkitFolder:WaitForChild("TeleportPart", 999)
                                     if not tpFolder then return end
                                     
-                                    local function onTeleportTouch(tpPart, hit)
-                                        local character = hit.Parent
-                                        if character ~= LocalPlayer.Character then return end
-                                        
-                                        local now = os.clock()
-                                        if (now - LastTpTouch) < 0.5 then return end
-                                        LastTpTouch = now
-                                        
-                                        local isBackBC = false
-                                        local currentObj = tpPart
-                                        while currentObj and currentObj ~= workspace do
-                                            if string.find(string.lower(currentObj.Name), "backbc") then
-                                                isBackBC = true
-                                                break
-                                            end
-                                            currentObj = currentObj.Parent
-                                        end
-                                        
-                                        if isBackBC then
-                                            local req = JekyEvents:FindFirstChild("CP_RequestResetToBC")
-                                            if req then req:FireServer() end
-                                        else
-                                            local req = JekyEvents:FindFirstChild("CP_RequestTeleportToLastCP")
-                                            if req then req:FireServer() end
-                                        end
-                                    end
+local function onTeleportTouch(tpPart, hit)
+    local character = hit.Parent
+    if character ~= LocalPlayer.Character then return end
+    
+    -- [ TAMBAHKAN BARIS INI ]
+    -- Cegah false-teleport akibat kaki (Foot/Leg) yang menembus lantai tipis!
+    -- Hanya akan teleport jika badan (HRP/Torso) yang benar-benar jatuh dan menyentuh.
+    if hit.Name ~= "HumanoidRootPart" and hit.Name ~= "Torso" and hit.Name ~= "UpperTorso" and hit.Name ~= "LowerTorso" then
+        return
+    end
+    
+    -- Cek jika pemain sedang digendong (mencegah bug teleport saat carry)
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if hrp and hrp:FindFirstChild("CarryWeld") then return end
+    
+    local now = os.clock()
+    if (now - LastTpTouch) < 0.5 then return end
+    LastTpTouch = now
+    
+    local isBackBC = false
+    local currentObj = tpPart
+    while currentObj and currentObj ~= workspace do
+        if string.find(string.lower(currentObj.Name), "backbc") then
+            isBackBC = true
+            break
+        end
+        currentObj = currentObj.Parent
+    end
+    
+    if isBackBC then
+        local req = JekyEvents:FindFirstChild("CP_RequestResetToBC")
+        if req then req:FireServer() end
+    else
+        local req = JekyEvents:FindFirstChild("CP_RequestTeleportToLastCP")
+        if req then req:FireServer() end
+    end
+end
                                     
                                     local function bindTeleportPart(part)
                                         if part:IsA("BasePart") then

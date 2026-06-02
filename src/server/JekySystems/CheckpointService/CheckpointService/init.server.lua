@@ -542,9 +542,23 @@ end
                     end
                     
                     if checkpointId == "Summit" or checkpointId == "ApexSummit" then
-                        if not PlayerRoundState[uid] then return end
-                        if not PlayerVisited[uid].BC then return end
-                        if not JekyConfig:GetSkipCheckpointMode() and not hasCompletedAllCheckpoints(uid) then return end
+    if not PlayerRoundState[uid] then return end
+    if not PlayerVisited[uid].BC then return end
+    
+    if not JekyConfig:GetSkipCheckpointMode() and not hasCompletedAllCheckpoints(uid) then 
+        -- TAMBAHKAN WARNING AGAR TIDAK SILENT FAILURE
+        warn(player.Name .. " mencoba Summit tetapi belum menginjak semua CP!")
+        
+        -- Beritahu UI Client bahwa mereka melewatkan CP
+        local highestCP = getHighestCPNumber()
+        CP_SkippedWarning:FireClient(player, highestCP) 
+        
+        -- Opsional: Teleport mereka ke CP tertinggi yang sudah mereka injak
+        return 
+    end
+    
+    awardSummit(player, checkpointId)
+    -- ...
                         awardSummit(player, checkpointId)
                         PlayerRoundState[uid] = false
                         PlayerBCNotified[uid] = nil

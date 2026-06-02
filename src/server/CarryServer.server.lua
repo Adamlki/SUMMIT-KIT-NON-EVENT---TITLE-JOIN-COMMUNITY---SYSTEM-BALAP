@@ -93,26 +93,25 @@ local function targetAvailable(p: Player) return not isBeingCarried(p) end
 
 local function saveHumState(uid: number, hum: Humanoid)
     savedHum[uid] = {
-    ws = hum.WalkSpeed,
-    useJP = hum.UseJumpPower,
-    jp = hum.JumpPower,
-    jh = hum.JumpHeight,
-    autoRotate = hum.AutoRotate,
-    jumpEnabled = hum:GetStateEnabled(Enum.HumanoidStateType.Jumping),
+        -- HAPUS ATAU COMMENT BAGIAN INI:
+        -- ws = hum.WalkSpeed,
+        -- useJP = hum.UseJumpPower,
+        -- jp = hum.JumpPower,
+        -- jh = hum.JumpHeight,
+        
+        autoRotate = hum.AutoRotate,
+        jumpEnabled = hum:GetStateEnabled(Enum.HumanoidStateType.Jumping),
     }
 end
+
 local function restoreHumState(uid: number, hum: Humanoid)
     local st = savedHum[uid]
     if st then
-        hum.WalkSpeed = st.ws
         hum.AutoRotate = st.autoRotate
-        if st.useJP then hum.JumpPower = st.jp else hum.JumpHeight = st.jh end
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, st.jumpEnabled)
         savedHum[uid] = nil
     else
         hum.AutoRotate = true
-        hum.WalkSpeed = 16
-        if hum.UseJumpPower then hum.JumpPower = 50 else hum.JumpHeight = 7.2 end
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
     end
 end
@@ -271,9 +270,11 @@ local function buildCarriedList(carrier: Player)
                 local cChar, cHRP = getCharHRP(carrier)
                 local tChar, tHRP, tHum = getCharHRP(target)
                 
-                if cHRP and tHRP then
-                    removeCarryWeldBetween(cHRP, tHRP)
-                end
+if cHRP and tHRP then
+    removeCarryWeldBetween(cHRP, tHRP)
+    -- TAMBAHKAN INI: Beri jarak aman ke belakang/samping agar hitbox tidak tabrakan
+    tHRP.CFrame = cHRP.CFrame * CFrame.new(0, 0, 3) 
+end
                 
                 if tHum then
                     restoreHumState(tUID, tHum)
@@ -351,11 +352,6 @@ local function buildCarriedList(carrier: Player)
                             ensureCarryWeldBetween(newHRP, tHRP)
                             
                             tHum.AutoRotate = false
-                            tHum.WalkSpeed = 0
-                            if tHum.UseJumpPower then tHum.JumpPower = 0 else tHum.JumpHeight = 0 end
-                            tHum.Sit = true
-                            tHum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
-                            tHum.Jump = false
                             
                             local oldMap2 = carryingByCarrier[oldCarrier.UserId]
                             if oldMap2 then
@@ -435,11 +431,6 @@ local function buildCarriedList(carrier: Player)
                         
                         saveHumState(target.UserId, tHum)
                         tHum.AutoRotate = false
-                        tHum.WalkSpeed = 0
-                        if tHum.UseJumpPower then tHum.JumpPower = 0 else tHum.JumpHeight = 0 end
-                        tHum.Sit = true
-                        tHum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
-                        tHum.Jump = false
                         
                         makeCarriedLight(tChar, target.UserId)
                         
