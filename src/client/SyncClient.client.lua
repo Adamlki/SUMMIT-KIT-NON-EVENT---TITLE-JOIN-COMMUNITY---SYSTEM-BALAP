@@ -24,7 +24,7 @@ local animPlayedConn = nil
 local deathConn = nil
 local leaveConn = nil
 local stopConns = {}
-local myPlayingTracks = {}
+local cachedTracks = {}
 
 local function stopLocalSync()
 	if animPlayedConn then animPlayedConn:Disconnect() animPlayedConn = nil end
@@ -36,12 +36,15 @@ local function stopLocalSync()
 	end
 	table.clear(stopConns)
 
-	for _, track in ipairs(myPlayingTracks) do
-		if track and track.IsPlaying then 
-			track:Stop() 
+	for _, track in pairs(cachedTracks) do
+		if track then
+			if track.IsPlaying then 
+				track:Stop() 
+			end
+			track:Destroy()
 		end
 	end
-	table.clear(myPlayingTracks)
+	table.clear(cachedTracks)
 end
 
 local function startLocalSync(targetPlayer)
@@ -64,20 +67,29 @@ local function startLocalSync(targetPlayer)
 			return 
 		end
 
-		local followerTrack = myAnim:LoadAnimation(hostTrack.Animation)
+		local animId = hostTrack.Animation.AnimationId
+		local followerTrack = cachedTracks[animId]
+		
+		if not followerTrack then
+			followerTrack = myAnim:LoadAnimation(hostTrack.Animation)
+			cachedTracks[animId] = followerTrack
+		end
+
 		followerTrack.Priority = Enum.AnimationPriority.Action
 		followerTrack.TimePosition = hostTrack.TimePosition
 		followerTrack:AdjustSpeed(hostTrack.Speed)
 		followerTrack:Play()
-
-		table.insert(myPlayingTracks, followerTrack)
 
 		local stopConn
 		stopConn = hostTrack.Stopped:Connect(function()
 			if followerTrack.IsPlaying then
 				followerTrack:Stop()
 			end
-			if stopConn then stopConn:Disconnect() end
+			if stopConn then 
+				stopConn:Disconnect() 
+				local index = table.find(stopConns, stopConn)
+				if index then table.remove(stopConns, index) end
+			end
 		end)
 		table.insert(stopConns, stopConn)
 	end
