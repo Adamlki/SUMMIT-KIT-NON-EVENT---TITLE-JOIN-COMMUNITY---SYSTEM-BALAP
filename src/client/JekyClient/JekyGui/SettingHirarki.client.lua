@@ -50,7 +50,7 @@ local hasScannedEffects = false
 -- ============================================================
 -- SHIFT LOCK SETTINGS
 -- ============================================================
- 
+
 local shiftControlGui = nil
 local shiftDragConnections = {}
 local shiftDragging = false
@@ -80,7 +80,7 @@ local function removeAurasFromCharacter(character, includeOwnPlayer)
     if not hiddenAuras[character] then hiddenAuras[character] = {} end
     
     for _, descendant in ipairs(character:GetDescendants()) do
-        if descendant:GetAttribute("AuraShop") or descendant:GetAttribute("IsAura") or descendant.Name:find("^Aura_") then
+        if descendant:GetAttribute("AuraShop") or descendant:GetAttribute("IsAura") or descendant:GetAttribute("IsClientAura") or descendant.Name:find("^Aura_") then
             table.insert(hiddenAuras[character], {
             object  = descendant,
             parent  = descendant.Parent,
@@ -166,6 +166,18 @@ local function toggleShadow(hide)
         if player.Character then removeAurasFromCharacter(player.Character, true) end
     else
         if player.Character then restoreAurasToCharacter(player.Character) end
+    end
+end
+ 
+local function toggleHideAura(hide)
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Character then
+            if hide then
+                removeAurasFromCharacter(p.Character, true)
+            else
+                restoreAurasToCharacter(p.Character)
+            end
+        end
     end
 end
  
@@ -980,24 +992,44 @@ end
                                 -- CHARACTER / PLAYER EVENTS
                                 -- ============================================================
                                 
+                                local function setupCharacterListeners(character)
+                                    character.DescendantAdded:Connect(function(descendant)
+                                        if hideAura or graphicMode then
+                                            if descendant:GetAttribute("AuraShop") or descendant:GetAttribute("IsAura") or descendant:GetAttribute("IsClientAura") or descendant.Name:find("^Aura_") then
+                                                if not hiddenAuras[character] then hiddenAuras[character] = {} end
+                                                table.insert(hiddenAuras[character], {
+                                                    object  = descendant,
+                                                    parent  = descendant.Parent,
+                                                    visible = descendant:IsA("BasePart") and descendant.Transparency or nil
+                                                })
+                                                task.defer(function()
+                                                    if descendant then descendant.Parent = nil end
+                                                end)
+                                            end
+                                        end
+                                    end)
+                                end
+                                
                                 Players.PlayerAdded:Connect(function(p)
                                     if p == player then return end
-                                    p.CharacterAdded:Connect(function()
+                                    p.CharacterAdded:Connect(function(character)
+                                        setupCharacterListeners(character)
                                         task.wait(1)
                                         if hideTitle then toggleHideTitle(true) end
                                         if hidePlayer then togglePlayerVisibility(true) end
                                         if hideAura then toggleHideAura(true) end
-                                        if graphicMode then removeAurasFromCharacter(p.Character, false) end
+                                        if graphicMode then removeAurasFromCharacter(character, false) end
                                     end)
                                 end)
                                 
-                                player.CharacterAdded:Connect(function()
+                                player.CharacterAdded:Connect(function(character)
+                                    setupCharacterListeners(character)
                                     task.wait(1)
                                     if hideTitle then toggleHideTitle(true) end
                                     if hidePlayer then togglePlayerVisibility(true) end
                                     if hideAura then toggleHideAura(true) end
                                     if hideShadow then toggleShadow(true) end
-                                    if graphicMode then removeAurasFromCharacter(player.Character, true) end
+                                    if graphicMode then removeAurasFromCharacter(character, true) end
                                     applyJumpSettings()
                                     local shiftBtn, shiftFrame = findShiftButton()
                                     if shiftBtn and shiftFrame then
@@ -1007,6 +1039,12 @@ end
                                         end
                                     end
                                 end)
+                                
+                                for _, p in pairs(Players:GetPlayers()) do
+                                    if p.Character then
+                                        setupCharacterListeners(p.Character)
+                                    end
+                                end
                                 
                                 task.spawn(function()
                                     if not player.Character then player.CharacterAdded:Wait() end

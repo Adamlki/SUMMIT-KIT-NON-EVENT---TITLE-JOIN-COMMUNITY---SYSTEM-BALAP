@@ -223,12 +223,19 @@ end
 -- ============================================================
 local listLayout = ScrollingFrame:FindFirstChildOfClass("UIListLayout")
  
+local refreshQueued = false
 local function refreshCanvas()
-    if listLayout then
-        ScrollingFrame.CanvasSize = UDim2.new(
-        0, 0,
-        0, listLayout.AbsoluteContentSize.Y
-        )
+    if listLayout and not refreshQueued then
+        refreshQueued = true
+        task.defer(function()
+            if ScrollingFrame and listLayout then
+                ScrollingFrame.CanvasSize = UDim2.new(
+                    0, 0,
+                    0, listLayout.AbsoluteContentSize.Y
+                )
+            end
+            refreshQueued = false
+        end)
     end
 end
  
