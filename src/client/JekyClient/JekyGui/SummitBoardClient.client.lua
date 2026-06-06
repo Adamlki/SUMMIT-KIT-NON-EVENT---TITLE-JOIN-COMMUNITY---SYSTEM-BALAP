@@ -76,14 +76,22 @@ local function render(lb)
         local il = tf:FindFirstChild("ImageLabel")
         if not (ul and tl) then continue end
         
+        -- FIX: Paksa teks agar tidak turun ke baris kedua (yang bikin teks jadi hilang/kosong)
+        ul.TextWrapped = false
+        ul.TextScaled = true
+        tl.TextWrapped = false
+        tl.TextScaled = true
+        
         local e = data[i]
         if e then
+            tf.Visible = true -- Tampilkan frame jika ada data
             ul.Text = i..". "..e.Username
             tl.Text = "⛰️ "..fmtNum(e.Summit)
             if il and il:IsA("ImageLabel") then
                 il.Image = "rbxthumb://type=AvatarHeadShot&id="..e.UserId.."&w=150&h=150"
             end
         else
+            tf.Visible = false -- Sembunyikan frame jika kosong
             ul.Text = i..". ---"
             tl.Text = "⛰️ 0"
             if il and il:IsA("ImageLabel") then il.Image = "" end

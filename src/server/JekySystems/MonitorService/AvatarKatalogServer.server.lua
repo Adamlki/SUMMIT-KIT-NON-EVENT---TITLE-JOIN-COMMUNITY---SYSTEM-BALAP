@@ -84,15 +84,6 @@ local function changeAvatar(player, targetUserId)
     -- Unequip tool yang sedang dipakai (tanpa destroy/clone)
     local equippedTool = unequipTools(player)
     
-    -- Hapus aksesori/pakaian lama saja (bukan tools, bukan billboard)
-    for _, item in ipairs(player.Character:GetChildren()) do
-        if item:IsA("Accessory") or item:IsA("Hat")
-            or item:IsA("Shirt") or item:IsA("Pants")
-            or item:IsA("ShirtGraphic") then
-            item:Destroy()
-        end
-    end
-    
     -- Apply deskripsi avatar baru
     local success, description = pcall(function()
         return Players:GetHumanoidDescriptionFromUserId(targetUserId)

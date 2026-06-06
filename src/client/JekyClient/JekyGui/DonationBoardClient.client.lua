@@ -41,6 +41,14 @@ local function updateUI(top10Data)
         receivedRanks[data.Rank] = true
         local frame = uiInit:FindFirstChild("Top" .. tostring(data.Rank))
         if frame then
+            frame.Visible = true
+            
+            -- FIX: Paksa teks agar tidak turun ke baris kedua (yang bikin teks jadi hilang/kosong)
+            frame.Username.TextWrapped = false
+            frame.Username.TextScaled = true
+            frame.Total.TextWrapped = false
+            frame.Total.TextScaled = true
+            
             frame.Username.Text = data.DisplayName
             frame.Total.Text = "R$ " .. tostring(data.TotalDonated)
             frame.ImageLabel.Image = "rbxthumb://type=AvatarHeadShot&id=" .. tostring(data.UserId) .. "&w=150&h=150"
@@ -51,6 +59,7 @@ local function updateUI(top10Data)
         if not receivedRanks[rank] then
             local frame = uiInit:FindFirstChild("Top" .. tostring(rank))
             if frame then
+                frame.Visible = false
                 frame.Username.Text = "Belum Ada"
                 frame.Total.Text = "R$ 0"
                 frame.ImageLabel.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"

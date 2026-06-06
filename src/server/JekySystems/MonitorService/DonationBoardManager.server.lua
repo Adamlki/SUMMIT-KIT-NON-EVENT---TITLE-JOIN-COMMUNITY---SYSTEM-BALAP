@@ -40,7 +40,7 @@ if not UpdateDonationBoardEvent then
 end
 
 -- ============================================
--- REFERENSI OBJEK
+-- REFERENSI OBJEK & CACHE DUMMY
 -- ============================================
 local allPartsFolder = workspace:WaitForChild("AllPartSummitkitJeky")
 local leaderboardFolder = allPartsFolder:WaitForChild("LeaderBoard")
@@ -49,8 +49,21 @@ local boardModel = leaderboardFolder:WaitForChild("DonationLeaderBoard")
 local statuesFolder = boardModel:FindFirstChild("Statues")
 local billboardTemplate = ReplicatedStorage:WaitForChild("DonationBillboardGui")
 
+local cachedDummies = {}
 if statuesFolder and billboardTemplate then
 	debugLog("INIT", "Semua referensi objek berhasil ditemukan!")
+	
+	-- Cache semua patung Top 1-3 dan simpan posisi aslinya, lalu sembunyikan di awal
+	for i = 1, 3 do
+		local dummy = statuesFolder:FindFirstChild("Top" .. tostring(i))
+		if dummy then
+			cachedDummies[i] = {
+				Model = dummy,
+				OriginalCFrame = dummy:GetPivot()
+			}
+			dummy.Parent = nil -- Sembunyikan di awal
+		end
+	end
 else
 	debugLog("INIT", "Peringatan: Ada objek yang hilang di Workspace atau ReplicatedStorage!", true)
 end
@@ -81,7 +94,12 @@ end
 local function updateStatue(rank, userId, displayName, totalDonated)
 	if not statuesFolder then return end
 
-	local dummy = statuesFolder:FindFirstChild("Top" .. tostring(rank))
+	local dummyCache = cachedDummies[rank]
+	if not dummyCache then return end
+	
+	local dummy = dummyCache.Model
+	dummy.Parent = statuesFolder -- Munculkan patung
+
 	if dummy and dummy:FindFirstChild("Humanoid") then
 		local humanoid = dummy.Humanoid
 		local rootPart = dummy:FindFirstChild("HumanoidRootPart")
@@ -91,8 +109,7 @@ local function updateStatue(rank, userId, displayName, totalDonated)
 			return
 		end
 
-		-- [SOLUSI UTAMA]: Rekam CFrame asli dummy
-		local originalCFrame = dummy:GetPivot() 
+		local originalCFrame = dummyCache.OriginalCFrame 
 
 		task.spawn(function()
 			debugLog("STATUE", "Mulai proses update patung Top " .. rank .. " (User: " .. displayName .. ")")
@@ -237,15 +254,18 @@ local function updateBoard()
 				updateStatue(rank, userId, displayName, totalDonated)
 			end
 		else
-			-- Hapus Billboard jika patung sudah tidak masuk Top 3
+			-- Sembunyikan patung dan hapus Billboard jika sudah tidak masuk Top 3
 			if rank <= 3 and statuesFolder then
-				local dummy = statuesFolder:FindFirstChild("Top" .. tostring(rank))
-				if dummy then
+				local dummyCache = cachedDummies[rank]
+				if dummyCache then
+					local dummy = dummyCache.Model
 					local gui = dummy:FindFirstChild("DonationBillboardGui")
 					if gui then 
 						gui:Destroy() 
 						debugLog("STATUE", "Menghapus BillboardGui dari patung kosong Top " .. rank)
 					end
+					-- Sembunyikan patung
+					dummy.Parent = nil
 				end
 			end
 		end

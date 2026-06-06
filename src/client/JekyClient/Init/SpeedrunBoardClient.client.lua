@@ -4,7 +4,7 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
 local CONFIG = {
-	LEADERBOARD_FOLDER_PATH = "AllPartSummitkitJeky/SpeedRun",
+	LEADERBOARD_FOLDER_PATH = "AllPartSummitkitJeky/LeaderBoard",
 	MAX_DISPLAY_ENTRIES = 10,
 	GLOBAL_UPDATE_INTERVAL = 60
 }
@@ -58,8 +58,15 @@ local function updateLeaderboardUI(lb)
 		local il = tf:FindFirstChild("ImageLabel")
 		if not (ul and tl) then continue end
 		
+		-- FIX: Paksa teks agar tidak turun ke baris kedua (yang bikin teks jadi hilang/kosong)
+		ul.TextWrapped = false
+		ul.TextScaled = true
+		tl.TextWrapped = false
+		tl.TextScaled = true
+		
 		local e = GlobalLeaderboard[i]
 		if e then
+			tf.Visible = true
 			local name = e.Username or "Player_"..e.UserId
 			ul.Text = i..". "..name
 			tl.Text = "🏃 "..formatTimeShort(e.BestTime)
@@ -67,6 +74,7 @@ local function updateLeaderboardUI(lb)
 				il.Image = "rbxthumb://type=AvatarHeadShot&id="..e.UserId.."&w=150&h=150"
 			end
 		else
+			tf.Visible = false
 			ul.Text = i..". ---"
 			tl.Text = "🏃 --:--.---"
 			if il and il:IsA("ImageLabel") then il.Image = "" end
@@ -103,17 +111,21 @@ end)
 
 -- Main Initialization
 task.spawn(function()
-	-- Tunggu folder dan SurfaceGui selesai dimuat
-	task.wait(5)
-	boards = findLeaderboards()
-	
-	-- Countdown Timer lokal
+	-- Countdown Timer lokal & Auto-Recovery
 	while true do
 		task.wait(1)
+		
+		-- Cari ulang leaderboard tiap detik (anti-error jika part telat ter-load / StreamingEnabled)
+		boards = findLeaderboards()
+		
 		nextUpdateIn = nextUpdateIn - 1
 		if nextUpdateIn < 0 then
 			nextUpdateIn = 0
 		end
+		
+		-- Update UI frame
+		updateAllUI()
+		-- Update tulisan detik
 		updateTimerUI()
 	end
 end)

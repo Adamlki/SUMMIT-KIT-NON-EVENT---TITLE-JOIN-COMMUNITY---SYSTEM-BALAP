@@ -34,68 +34,81 @@ local function applyAura(character, auraName)
     
     local processedParts = {}
     
-    -- Clone parts spesifik ke masing-masing anggota tubuh
+    -- Daripada mengkloning Part utuh, kita HANYA mengkloning isi visualnya (Particle, Light, dsb)
     for _, partName in ipairs(bodyParts) do
         local auraPart = auraModel:FindFirstChild(partName)
         local characterPart = character:FindFirstChild(partName)
         
         if auraPart and characterPart and auraPart:IsA("BasePart") then
-            local clone = auraPart:Clone()
-            clone:SetAttribute("IsClientAura", true)
-            clone.Transparency = 1 -- Sembunyikan fisik balok (hanya butuh partikel)
-            clone.CanCollide = false
-            clone.CanTouch = false
-            clone.Massless = true
-            clone.Anchored = false
-            clone.CFrame = characterPart.CFrame
-            clone.Parent = characterPart
-            
-            -- [OPTIMASI]: Batasi Rate Partikel Maksimal 30 agar ringan di HP / Client
-            for _, fx in ipairs(clone:GetDescendants()) do
-                if fx:IsA("ParticleEmitter") and fx.Rate > 30 then
-                    fx.Rate = 30
+            -- Ambil semua efek di dalam part tersebut dan pindahkan ke bagian tubuh pemain
+            for _, item in ipairs(auraPart:GetChildren()) do
+                if item:IsA("ParticleEmitter") or item:IsA("Trail") or item:IsA("Beam") or item:IsA("Light") or item:IsA("Attachment") then
+                    local cloneFx = item:Clone()
+                    cloneFx:SetAttribute("IsClientAura", true)
+                    
+                    if cloneFx:IsA("ParticleEmitter") and cloneFx.Rate > 30 then
+                        cloneFx.Rate = 30
+                    end
+                    
+                    cloneFx.Parent = characterPart
                 end
             end
-            
-            local weld = Instance.new("WeldConstraint")
-            weld.Part0 = clone
-            weld.Part1 = characterPart
-            weld.Parent = clone
-            weld:SetAttribute("IsClientAura", true)
             
             processedParts[partName] = true
         end
     end
     
-    -- Sisa parts yang tidak terikat ke nama anggota tubuh tertentu (gabungkan ke HumanoidRootPart)
+    -- Untuk objek Aura seperti "MeshPart" (contoh: sayap, halo) yang bukan menempel di nama anggota tubuh tertentu
     for _, child in ipairs(auraModel:GetChildren()) do
         if child:IsA("BasePart") and not processedParts[child.Name] then
-            local clone = child:Clone()
-            clone:SetAttribute("IsClientAura", true)
+            -- Jika itu hanya wadah efek, clone efeknya saja
+            local hasMesh = child:FindFirstChildOfClass("SpecialMesh") or child:IsA("MeshPart")
             
-            -- Biarkan terlihat jika itu Mesh / Halo visual yang bukan HumanoidRootPart
-            if clone.Name == "HumanoidRootPart" then
-                clone.Transparency = 1
-            end
-            
-            clone.CanCollide = false
-            clone.CanTouch = false
-            clone.Massless = true
-            clone.Anchored = false
-            clone.CFrame = humanoidRootPart.CFrame
-            clone.Parent = humanoidRootPart
-            
-            for _, fx in ipairs(clone:GetDescendants()) do
-                if fx:IsA("ParticleEmitter") and fx.Rate > 30 then
-                    fx.Rate = 30
+            if hasMesh or child.Transparency < 1 then
+                -- Jika butuh part fisiknya untuk dirender (karena ada mesh/gambar)
+                local clone = child:Clone()
+                clone:SetAttribute("IsClientAura", true)
+                
+                -- [SANGAT PENTING] Hapus semua sisa Weld/Motor6D dari Studio sebelum di-weld ke pemain
+                for _, obj in ipairs(clone:GetDescendants()) do
+                    if obj:IsA("JointInstance") then
+                        obj:Destroy()
+                    end
+                end
+                
+                clone.CanCollide = false
+                clone.CanTouch = false
+                clone.Massless = true
+                clone.Anchored = false
+                clone.CFrame = humanoidRootPart.CFrame
+                clone.Parent = humanoidRootPart
+                
+                for _, fx in ipairs(clone:GetDescendants()) do
+                    if fx:IsA("ParticleEmitter") and fx.Rate > 30 then
+                        fx.Rate = 30
+                    end
+                end
+                
+                local weld = Instance.new("WeldConstraint")
+                weld.Part0 = clone
+                weld.Part1 = humanoidRootPart
+                weld.Parent = clone
+                weld:SetAttribute("IsClientAura", true)
+            else
+                -- Jika hanya part kosong transparan, clone efeknya saja ke HumanoidRootPart
+                for _, item in ipairs(child:GetChildren()) do
+                    if item:IsA("ParticleEmitter") or item:IsA("Trail") or item:IsA("Beam") or item:IsA("Light") or item:IsA("Attachment") then
+                        local cloneFx = item:Clone()
+                        cloneFx:SetAttribute("IsClientAura", true)
+                        
+                        if cloneFx:IsA("ParticleEmitter") and cloneFx.Rate > 30 then
+                            cloneFx.Rate = 30
+                        end
+                        
+                        cloneFx.Parent = humanoidRootPart
+                    end
                 end
             end
-            
-            local weld = Instance.new("WeldConstraint")
-            weld.Part0 = clone
-            weld.Part1 = humanoidRootPart
-            weld.Parent = clone
-            weld:SetAttribute("IsClientAura", true)
         end
     end
 end
