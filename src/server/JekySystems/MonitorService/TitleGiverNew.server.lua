@@ -17,6 +17,7 @@ ApplyEvent.Parent = RS
 local TitleGiver = RS:WaitForChild("TitleGiver")
 
 
+
 -- Memanggil module JekyConfig untuk cek akses Admin
 local JekyConfig = require(ServerStorage:WaitForChild("JekyModules"):WaitForChild("JekyConfig"))
 
@@ -192,8 +193,6 @@ ApplyEvent.OnServerEvent:Connect(function(sender, data)
 	if not checkRateLimit(sender.UserId, "ApplyTitle", 2) then return end
 
 	if data.RequestData then
-		local senderRole = sender:GetAttribute("RoleTitle")
-		if not JekyConfig:HasCommandAccess(senderRole, "_AddRole") then return end
 		local target = Players:FindFirstChild(data.TargetName) or sender
 		local d = loadTitle(target.UserId)
 		ApplyEvent:FireClient(sender, {LoadedData = d, Target = target.Name})
@@ -202,11 +201,13 @@ ApplyEvent.OnServerEvent:Connect(function(sender, data)
 
 	local target = Players:FindFirstChild(data.Target) or sender
 
-	-- PERBAIKAN: Hanya admin yang bisa modify title
-	local senderRole = sender:GetAttribute("RoleTitle")
-	if not JekyConfig:HasCommandAccess(senderRole, "_AddRole") then
-		dWarn("Exploit terdeteksi: " .. sender.Name .. " mencoba memodifikasi title milik " .. target.Name)
-		return
+	-- PERBAIKAN: Validasi keamanan supaya exploiter tidak bisa ubah Title orang lain
+	if target ~= sender then
+		local senderRole = sender:GetAttribute("RoleTitle")
+		if not JekyConfig:HasCommandAccess(senderRole, "_AddRole") then
+			dWarn("Exploit terdeteksi: " .. sender.Name .. " mencoba memodifikasi title milik " .. target.Name)
+			return
+		end
 	end
 
 	if data.ClearLine then
@@ -259,8 +260,6 @@ Players.PlayerRemoving:Connect(function(p)
 	titleCache[p.UserId] = nil
 	-- Bersihkan rateLimits cache juga
 	rateLimits[p.UserId .. "_ApplyTitle"] = nil
-	rateLimits[p.UserId .. "_TitleClaim"] = nil
-	rateLimits[p.UserId .. "_TitlePreview"] = nil
 end)
 
 for _, p in ipairs(Players:GetPlayers()) do

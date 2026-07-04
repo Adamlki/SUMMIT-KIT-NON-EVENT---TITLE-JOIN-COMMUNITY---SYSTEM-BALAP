@@ -803,7 +803,7 @@ local function safeSet(store, key, value)
                                                                                                     pcall(function()
                                                                                                         store:UpdateAsync(key, function(current)
                                                                                                             local cur    = current or 0
-                                                                                                            local newVal = math.max(cur, math.floor(total))
+                                                                                                            local newVal = math.floor(total)
                                                                                                             return (newVal ~= cur) and newVal or nil
                                                                                                         end)
                                                                                                     end)
@@ -888,7 +888,7 @@ local function safeSet(store, key, value)
                                                                                                                         local ok = pcall(function()
                                                                                                                             store:UpdateAsync(key, function(current)
                                                                                                                                 local cur    = current or 0
-                                                                                                                                local newVal = math.max(cur, total)
+                                                                                                                                local newVal = total
                                                                                                                                 return (newVal ~= cur) and newVal or nil
                                                                                                                             end)
                                                                                                                         end)

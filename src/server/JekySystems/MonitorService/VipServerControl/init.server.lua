@@ -12,7 +12,7 @@ local JekyVipData = require(ServerStorage:WaitForChild("JekyModules"):WaitForChi
 -- ============================================================
 -- CONFIG 
 -- ============================================================
-local VIP_GAMEPASS_ID   = 1710737303  -- ganti dengan ID gamepass asli
+local VIP_GAMEPASS_ID   = 1883524833  -- ganti dengan ID gamepass asli
 local VIP_PRICE_DISPLAY = "$25"      -- ganti sesuai harga tampilan
  
 -- ============================================================

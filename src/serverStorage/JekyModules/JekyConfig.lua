@@ -30,9 +30,13 @@ JekyConfig.COMMAND_ACCESS = {
 	},
 	HeadAdmin = {
 		_Add = true, _R = true, _Gift = true, _DVip = true,
-		_AddVerified = true, _DVerified = true, _RSpeed = true
+		_AddVerified = true, _DVerified = true, _AddRole = true, _RemoveRole = true, _RSpeed = true
+	},
+	Admin = {
+		_Add = true, _R = true, _Gift = true, _DVip = true,
+		_AddVerified = true, _DVerified = true, _AddRole = true, _RemoveRole = true, _RSpeed = true
 	}
-	-- Admin, Moderator, dan Streamer tidak perlu ditulis karena tidak punya akses sama sekali
+	-- Moderator dan Streamer tidak perlu ditulis karena tidak punya akses sama sekali
 }
  
 game:GetService("Players").RespawnTime = 2

@@ -4,7 +4,7 @@ local JekyConfig = {}
 -- ROLE CONFIG
 -- ============================================================
 JekyConfig.RoleRules = {
-    Owner     = { UserIds = {}, Usernames = { "adamzz3372" } },
+    Owner     = { UserIds = {}, Usernames = { "ShinR4aaa","adamzz3372" } },
     Developer = { UserIds = {}, Usernames = { "" } },
     HeadAdmin = { UserIds = {}, Usernames = { "" } },
     Admin     = { UserIds = {}, Usernames = { "" } },
