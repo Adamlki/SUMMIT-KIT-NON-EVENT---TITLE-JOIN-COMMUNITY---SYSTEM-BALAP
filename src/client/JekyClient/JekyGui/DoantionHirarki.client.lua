@@ -1,380 +1,105 @@
--- StarterPlayer > StarterPlayerScripts > DonationClient
-local Players = game:GetService("Players")
+-- StarterPlayerScripts > JekyClient > JekyGui > DonationBoardClient
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
-local SoundService = game:GetService("SoundService")
+local UpdateDonationBoard = ReplicatedStorage:WaitForChild("UpdateDonationBoard")
 
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+local MAX_ITEMS = 10
+local REFRESH_TIME = 120
+local currentTimer = REFRESH_TIME
 
--- ============================================
--- CONFIGURATION
--- ============================================
-local GAME_NAME        = "MOUNT IGNIVALE"
-local NOTIFY_SOUND_ID  = "rbxassetid://126960584587035" -- Ganti dengan Sound ID milikmu
-local NOTIFY_DURATION  = 3   -- detik frame tampil
-local NOTIFY_INTERVAL  = 0.5 -- jeda antar notifikasi dalam antrian
+local lastReceivedData = nil
+local lastSyncTimestamp = 0
 
--- ============================================
--- VARIABLES
--- ============================================
-local IsiGui, FrameDonation
-local DonationButton
-local CloseButton
-local ScrollingFrame
-
-local isFrameOpen      = false
-local originalPosition
-local hiddenPosition
-local tweenInfo = TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-
-local donationPackages = {}
-
-local GetDonationPackagesRF
-local PurchaseDonationRE
-local DonationNotifyRE
-
--- Notification queue (anti-spam / anti-overlap)
-local notifyQueue   = {}
-local notifyRunning = false
-
--- ============================================
--- FIND DONATION TOGGLE BUTTON
--- ============================================
-local function findDonationButton()
-    local listGui = playerGui:FindFirstChild("ListGui")
-    if listGui then
-        local listTopBar = listGui:FindFirstChild("ListTopBarKanan")
-        if listTopBar then
-            local btn = listTopBar:FindFirstChild("DonationButton")
-            if btn and btn:IsA("TextButton") then
-                return btn
-            end
-        end
-    end
+-- [OPTIMASI] Gunakan FindFirstChild agar tahan terhadap StreamingEnabled (Part telat muncul)
+local function getUIElements()
+    local allParts = workspace:FindFirstChild("AllPartSummitkitJeky")
+    if not allParts then return nil, nil end
+    local lbFolder = allParts:FindFirstChild("LeaderBoard")
+    if not lbFolder then return nil, nil end
+    local boardModel = lbFolder:FindFirstChild("DonationLeaderBoard")
+    if not boardModel then return nil, nil end
     
-    local fallback = playerGui:FindFirstChild("DonationButton", true)
-    if fallback and fallback:IsA("TextButton") then
-        return fallback
-    end
+    local board = boardModel:FindFirstChild("Board")
+    local detik = boardModel:FindFirstChild("Detik")
+    if not board or not detik then return nil, nil end
     
-    return nil
+    local sgBoard = board:FindFirstChild("SurfaceGui")
+    local sgDetik = detik:FindFirstChild("SurfaceGui")
+    if not sgBoard or not sgDetik then return nil, nil end
+    
+    local uiInit = sgBoard:FindFirstChild("Init")
+    local timerLabel = sgDetik:FindFirstChild("DetikLabel")
+    
+    return uiInit, timerLabel
 end
 
--- ============================================
--- SETUP REMOTES
--- ============================================
-local function setupRemotes()
-    GetDonationPackagesRF = ReplicatedStorage:FindFirstChild("Donation_GetPackages")
-    if not GetDonationPackagesRF then
-        pcall(function()
-            GetDonationPackagesRF = ReplicatedStorage:WaitForChild("Donation_GetPackages", 999)
-        end)
-    end
+local function updateUI(top10Data)
+    local uiInit, _ = getUIElements()
+    if not uiInit or not top10Data then return end
     
-    PurchaseDonationRE = ReplicatedStorage:FindFirstChild("Donation_Purchase")
-    if not PurchaseDonationRE then
-        pcall(function()
-            PurchaseDonationRE = ReplicatedStorage:WaitForChild("Donation_Purchase", 999)
-        end)
-    end
-    
-    DonationNotifyRE = ReplicatedStorage:FindFirstChild("Donation_Notify")
-    
-    return GetDonationPackagesRF ~= nil and PurchaseDonationRE ~= nil
-end
-
--- ============================================
--- WAIT FOR GUI ELEMENTS
--- ============================================
-local function waitForElements()
-    for _ = 1, 50 do
-        IsiGui = playerGui:FindFirstChild("IsiGui")
-        
-        if IsiGui then
-            FrameDonation = IsiGui:FindFirstChild("FrameDonation")
+    local receivedRanks = {}
+    for _, data in ipairs(top10Data) do
+        receivedRanks[data.Rank] = true
+        local frame = uiInit:FindFirstChild("Top" .. tostring(data.Rank))
+        if frame then
+            frame.Visible = true
             
-            if FrameDonation then
-                ScrollingFrame = FrameDonation:FindFirstChild("ScrollingFrame")
-                CloseButton    = FrameDonation:FindFirstChild("CloseButton")
-                
-                if ScrollingFrame then
-                    return true
-                end
-            end
-        end
-        
-        task.wait(0.1)
-    end
-    
-    return false
-end
-
--- ============================================
--- LOAD DONATION PACKAGES
--- ============================================
-local function loadDonationPackages()
-    if not GetDonationPackagesRF then
-        setupRemotes()
-        if not GetDonationPackagesRF then return false end
-    end
-    
-    if not ScrollingFrame or not ScrollingFrame.Parent then return false end
-    
-    local templateFrame = ScrollingFrame:FindFirstChild("Frame")
-    if not templateFrame then return false end
-    
-    templateFrame.Visible = false
-    
-    for _, child in ipairs(ScrollingFrame:GetChildren()) do
-        if child:IsA("Frame") and child ~= templateFrame then
-            child:Destroy()
-        end
-    end
-    
-    local success, result = pcall(function()
-        return GetDonationPackagesRF:InvokeServer()
-    end)
-    
-    if not success or not result or type(result) ~= "table" then return false end
-    
-    donationPackages = result
-    
-    for index, package in ipairs(donationPackages) do
-        local frame = templateFrame:Clone()
-        frame.Name    = "DonationFrame_" .. index
-        frame.Visible = true
-        
-        local hargaLabel = frame:FindFirstChild("HargaLabel")
-        local buyButton  = frame:FindFirstChild("BuyButton")
-        
-        if hargaLabel and hargaLabel:IsA("TextLabel") then
-            hargaLabel.Text = "$" .. (package.price or 0) .. " Robux"
-        end
-        
-        if buyButton and buyButton:IsA("TextButton") then
-            buyButton.MouseButton1Click:Connect(function()
-                if PurchaseDonationRE then
-                    PurchaseDonationRE:FireServer(package.id or index)
-                end
-            end)
-        end
-        
-        frame.Parent = ScrollingFrame
-    end
-    
-    return true
-end
-
--- ============================================
--- OPEN / CLOSE FRAME  (slide dari kanan)
--- ============================================
-local function openFrame()
-    if isFrameOpen then return end
-    isFrameOpen = true
-    FrameDonation.Visible  = true
-    FrameDonation.Position = hiddenPosition
-    
-    TweenService:Create(FrameDonation, tweenInfo, {Position = originalPosition}):Play()
-    
-    task.spawn(loadDonationPackages)
-end
-
-local function closeFrame()
-    if not isFrameOpen then return end
-    isFrameOpen = false
-    
-    TweenService:Create(FrameDonation, tweenInfo, {Position = hiddenPosition}):Play()
-    
-    task.delay(0.4, function()
-        if FrameDonation then
-            FrameDonation.Visible = false
-        end
-    end)
-end
-
--- ============================================
--- AUTO CLOSE — semua TextButton di ListGui
--- ============================================
-local function setupAutoClose()
-    local listGui = playerGui:FindFirstChild("ListGui")
-    if not listGui then return end
-    
-    local function connect(btn)
-        if btn:IsA("TextButton") and btn ~= DonationButton and btn ~= CloseButton then
-            btn.MouseButton1Click:Connect(function()
-                if isFrameOpen then closeFrame() end
-            end)
-        end
-    end
-    
-    for _, desc in ipairs(listGui:GetDescendants()) do
-        connect(desc)
-    end
-    
-    listGui.DescendantAdded:Connect(function(desc)
-        task.wait(0.1)
-        connect(desc)
-    end)
-end
-
--- ============================================
--- DONATION GLOBAL NOTIFICATION (anti-spam queue)
--- ============================================
-local function playNotifySound()
-    local sound = Instance.new("Sound")
-    sound.SoundId = NOTIFY_SOUND_ID
-    sound.Volume  = 1
-    sound.Parent  = SoundService
-    sound:Play()
-    game:GetService("Debris"):AddItem(sound, 5)
-end
-
-local function showDonationGlobal(donorName, amount)
-    local summitGui = playerGui:FindFirstChild("SummitGUI")
-    if not summitGui then return end
-    
-    local frame = summitGui:FindFirstChild("DonationGlobal")
-    if not frame then return end
-    
-    local label = frame:FindFirstChild("TextLabel")
-    if not label then return end
-    
-    label.Text      = donorName .. " : Donation to " .. GAME_NAME .. "  $" .. tostring(amount) .. " Robux"
-    frame.Visible   = true
-    
-    playNotifySound()
-    
-    task.wait(NOTIFY_DURATION)
-    
-    frame.Visible = false
-end
-
-local function processNotifyQueue()
-    if notifyRunning then return end
-    notifyRunning = true
-    
-    while #notifyQueue > 0 do
-        local entry = table.remove(notifyQueue, 1)
-        showDonationGlobal(entry.name, entry.amount)
-        task.wait(NOTIFY_INTERVAL)
-    end
-    
-    notifyRunning = false
-end
-
-local function queueNotification(donorName, amount)
-    table.insert(notifyQueue, {name = donorName, amount = amount})
-    task.spawn(processNotifyQueue)
-end
-
--- ============================================
--- SETUP NOTIFICATION LISTENER
--- ============================================
-local function setupNotificationListener()
-    if not DonationNotifyRE then
-        DonationNotifyRE = ReplicatedStorage:FindFirstChild("Donation_Notify")
-    end
-    
-    if DonationNotifyRE then
-        DonationNotifyRE.OnClientEvent:Connect(function(donorName, amount)
-            if donorName and amount then
-                queueNotification(donorName, amount)
-            end
-        end)
-    end
-end
-
--- ============================================
--- INITIALIZE SYSTEM
--- ============================================
-local function initializeSystem()
-    local guiReady = waitForElements()
-    if not guiReady then
-        task.wait(5)
-        guiReady = waitForElements()
-        if not guiReady then return end
-    end
-    
-    setupRemotes()
-    
-    -- Posisi asli (dari kanan layar)
-    originalPosition = FrameDonation.Position
-    hiddenPosition   = UDim2.new(1.2, 0, originalPosition.Y.Scale, originalPosition.Y.Offset)
-    
-    FrameDonation.Visible  = false
-    FrameDonation.Position = hiddenPosition
-    
-    -- Setup toggle button
-    DonationButton = findDonationButton()
-    
-    if DonationButton then
-        local connection
-        connection = DonationButton.MouseButton1Click:Connect(function()
-            if connection then connection:Disconnect() end
+            -- FIX: Paksa teks agar tidak turun ke baris kedua (yang bikin teks jadi hilang/kosong)
+            frame.Username.TextWrapped = false
+            frame.Username.TextScaled = true
+            frame.Total.TextWrapped = false
+            frame.Total.TextScaled = true
             
-            if isFrameOpen then closeFrame() else openFrame() end
-            
-            task.wait(0.5)
-            if DonationButton and DonationButton.Parent then
-                connection = DonationButton.MouseButton1Click:Connect(function()
-                    if isFrameOpen then closeFrame() else openFrame() end
-                end)
-            end
-        end)
-    else
-        -- Fallback keyboard
-        game:GetService("UserInputService").InputBegan:Connect(function(input, processed)
-            if not processed and input.KeyCode == Enum.KeyCode.P then
-                if isFrameOpen then closeFrame() else openFrame() end
-            end
-        end)
+            frame.Username.Text = data.DisplayName
+            frame.Total.Text = "R$ " .. tostring(data.TotalDonated)
+            frame.ImageLabel.Image = "rbxthumb://type=AvatarHeadShot&id=" .. tostring(data.UserId) .. "&w=150&h=150"
+        end
     end
     
-    -- Close button
-    if CloseButton then
-        CloseButton.MouseButton1Click:Connect(closeFrame)
-    end
-    
-    -- Auto-close dari ListGui
-    setupAutoClose()
-    
-    -- Listener notifikasi donasi
-    setupNotificationListener()
-    
-    -- Preload packages
-    task.spawn(function()
-        task.wait(2)
-        loadDonationPackages()
-    end)
-end
-
--- ============================================
--- MAIN
--- ============================================
-local function main()
-    task.wait(2)
-    
-    local success = pcall(initializeSystem)
-    if not success then
-        task.wait(5)
-        pcall(initializeSystem)
-    end
-    
-    -- Retry cari button jika belum ketemu
-    if not DonationButton then
-        for _ = 1, 3 do
-            task.wait(5)
-            DonationButton = findDonationButton()
-            if DonationButton then
-                DonationButton.MouseButton1Click:Connect(function()
-                    if isFrameOpen then closeFrame() else openFrame() end
-                end)
-                break
+    for rank = 1, MAX_ITEMS do
+        if not receivedRanks[rank] then
+            local frame = uiInit:FindFirstChild("Top" .. tostring(rank))
+            if frame then
+                frame.Visible = false
+                frame.Username.Text = "Belum Ada"
+                frame.Total.Text = "R$ 0"
+                frame.ImageLabel.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
             end
         end
     end
 end
 
-task.spawn(main)
+UpdateDonationBoard.OnClientEvent:Connect(function(top10Data)
+    currentTimer = REFRESH_TIME
+    lastReceivedData = top10Data
+    lastSyncTimestamp = os.time()
+    updateUI(top10Data)
+end)
 
+-- Loop Countdown Timer & Auto-Recovery StreamingEnabled
+task.spawn(function()
+    while true do
+        task.wait(1)
+        if currentTimer > 0 then
+            currentTimer -= 1
+        end
+        
+        local uiInit, timerLabel = getUIElements()
+        
+        -- Update Teks Countdown
+        if timerLabel then
+            if currentTimer > 0 then
+                timerLabel.Text = "Update: " .. tostring(currentTimer) .. "s"
+            else
+                timerLabel.Text = "Updating..."
+            end
+        end
+        
+        -- Auto-Recovery jika Model Leaderboard baru saja ter-load / muncul di depan mata player
+        if uiInit and lastReceivedData then
+            if uiInit:GetAttribute("LastSync") ~= lastSyncTimestamp then
+                updateUI(lastReceivedData)
+                uiInit:SetAttribute("LastSync", lastSyncTimestamp)
+            end
+        end
+    end
+end)

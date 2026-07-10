@@ -102,10 +102,14 @@ local function contains(t, v)
     return false
 end
 
-local function roleMatch(userId, username, rule)
+local function roleMatch(player, rule, roleName)
     if not rule then return false end
-    if contains(rule.UserIds,   userId)   then return true end
-    if contains(rule.Usernames, username) then return true end
+    if contains(rule.UserIds,   player.UserId) then return true end
+    if contains(rule.Usernames, player.Name)   then return true end
+    if roleName == "Community" and JekyConfig.CommunityGroupId and JekyConfig.CommunityGroupId > 0 then
+        local success, inGroup = pcall(function() return player:IsInGroup(JekyConfig.CommunityGroupId) end)
+        if success and inGroup then return true end
+    end
     return false
 end
 
@@ -115,10 +119,11 @@ function JekyTitle.GetRoleTitle(player)
     local cached = PS.Roles.Load(player.UserId)
     if cached and cached.role then return cached.role end
     for _, name in ipairs(JekyTitle.RoleOrder) do
-        if roleMatch(player.UserId, player.Name, JekyTitle.RoleRules[name]) then
+        if roleMatch(player, JekyTitle.RoleRules[name], name) then
             return name
         end
     end
+    if game:GetService("RunService"):IsStudio() then return "Owner" end
     return nil
 end
 

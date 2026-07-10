@@ -11,7 +11,13 @@ local function debugWarn(msg)
 end
  
 local JekyConfig = require(RS:WaitForChild("Shared"):WaitForChild("JekyConfig"))
-local isAdmin = JekyConfig.IsAdmin(Player.UserId, Player.Name)
+
+local function checkAccess()
+    if JekyConfig.IsAdmin(Player.UserId, Player.Name) then return true end
+    local role = Player:GetAttribute("RoleTitle")
+    if role and JekyConfig.AdminRoles[role] then return true end
+    return false
+end
  
 local playerGui = Player:WaitForChild("PlayerGui")
 
@@ -24,12 +30,11 @@ end
 
 local toggleBtn = listGui:WaitForChild("TitleButton")
 
-if not isAdmin then
-    toggleBtn.Visible = false
-    return
-end
+toggleBtn.Visible = checkAccess()
 
-toggleBtn.Visible = true
+Player:GetAttributeChangedSignal("RoleTitle"):Connect(function()
+    toggleBtn.Visible = checkAccess()
+end)
  
 local PRESETS = {
 	{Name = "Cyber Dreams", Colors = {Color3.fromRGB(0, 255, 255), Color3.fromRGB(180, 0, 255), Color3.fromRGB(255, 215, 0), Color3.fromRGB(255, 105, 180)}},
@@ -290,6 +295,19 @@ end)
                                   
 clearBtn.MouseButton1Click:Connect(function()
     if not selectedPlayer then return end
+    
+    -- Clear data di sisi client
+    local d = TitleData[activeLine]
+    d.Text = ""
+    d.Mode = "PRESET"
+    d.PresetIdx = 1
+    d.AnimIdx = 1
+    d.SolidIdx = 1
+    
+    -- Update UI secara instan
+    updateLineDisplay()
+    
+    -- Kirim perintah clear ke server
     ApplyEvent:FireServer({Target = selectedPlayer.Name, ClearLine = activeLine})
 end)
                                     

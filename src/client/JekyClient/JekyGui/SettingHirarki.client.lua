@@ -22,6 +22,7 @@ local hidePlayer = false
 local hideShadow = false
 local graphicMode = false
 local hideAura = false
+local soundEffect = true
  
 local playerVisibilityStates = {}
 local originalLightingSettings = {}
@@ -859,6 +860,13 @@ end
                                         updateToggleUI(settingFrame, true, true)
                                         createShiftControlGUI()
                                     end
+                                    
+                                elseif settingName == "SoundEffectBtn" then
+                                    soundEffect = not soundEffect
+                                    updateToggleUI(settingFrame, soundEffect, false)
+                                    if playerGui then
+                                        playerGui:SetAttribute("SoundEffectsEnabled", soundEffect)
+                                    end
                                 end
                             end)
                         end
@@ -869,11 +877,14 @@ end
                         
                         local function loadSettings()
                             if not ScrollingFrame then return end
-                            local settingNames = {"HideName", "HideAura", "HidePlayer", "HideShadow", "HideGrafik", "SetingJump", "SetingShiftLock"}
+                            local settingNames = {"HideName", "HideAura", "HidePlayer", "HideShadow", "HideGrafik", "SetingJump", "SetingShiftLock", "SoundEffectBtn"}
                             for _, name in ipairs(settingNames) do
                                 local settingFrame = ScrollingFrame:FindFirstChild(name)
                                 if settingFrame then
                                     setupSettingToggle(settingFrame, name)
+                                    if name == "SoundEffectBtn" then
+                                        updateToggleUI(settingFrame, soundEffect, false)
+                                    end
                                 end
                             end
                             applyJumpSettings()
@@ -1030,13 +1041,40 @@ end
                                     if hideAura then toggleHideAura(true) end
                                     if hideShadow then toggleShadow(true) end
                                     if graphicMode then removeAurasFromCharacter(character, true) end
-                                    applyJumpSettings()
-                                    local shiftBtn, shiftFrame = findShiftButton()
-                                    if shiftBtn and shiftFrame then
-                                        captureOriginalShiftValues(shiftBtn, shiftFrame)
-                                        if shiftSettings.Size and shiftSettings.Position then
-                                            applyShiftSettings()
+                                    
+                                    -- Tunggu sampai TouchGui dan Shift benar-benar siap setelah respawn
+                                    task.spawn(function()
+                                        local touchGui = playerGui:WaitForChild("TouchGui", 10)
+                                        if touchGui then
+                                            local controlFrame = touchGui:WaitForChild("TouchControlFrame", 5)
+                                            if controlFrame then
+                                                controlFrame:WaitForChild("JumpButton", 5)
+                                            end
                                         end
+                                        
+                                        -- Apply settings setelah elemen GUI bawaan Roblox dipastikan ter-load
+                                        applyJumpSettings()
+                                        
+                                        local shiftBtn, shiftFrame = findShiftButton()
+                                        if shiftBtn and shiftFrame then
+                                            captureOriginalShiftValues(shiftBtn, shiftFrame)
+                                            if shiftSettings.Size and shiftSettings.Position then
+                                                applyShiftSettings()
+                                            end
+                                        end
+                                    end)
+                                end)
+                                
+                                -- Tambahan proteksi jika TouchGui dire-create sewaktu-waktu oleh Roblox (saat ubah orientasi/input)
+                                playerGui.ChildAdded:Connect(function(child)
+                                    if child.Name == "TouchGui" then
+                                        task.spawn(function()
+                                            local controlFrame = child:WaitForChild("TouchControlFrame", 5)
+                                            if controlFrame then
+                                                controlFrame:WaitForChild("JumpButton", 5)
+                                                applyJumpSettings()
+                                            end
+                                        end)
                                     end
                                 end)
                                 

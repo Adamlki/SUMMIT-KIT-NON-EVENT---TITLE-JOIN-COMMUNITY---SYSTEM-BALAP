@@ -468,36 +468,7 @@ end
                 return num == 0 and "BC" or ("CP" .. num)
             end
             
-            local function areCharactersWelded(charA, charB)
-                for _, part in ipairs(charA:GetDescendants()) do
-                    if part:IsA("WeldConstraint") or part:IsA("Weld") or part:IsA("Motor6D") then
-                        local p0, p1 = part.Part0, part.Part1
-                        if p0 and p1 then
-                            if (charA:IsAncestorOf(p0) and charB:IsAncestorOf(p1))
-                                or (charA:IsAncestorOf(p1) and charB:IsAncestorOf(p0)) then
-                                return true
-                            end
-                        end
-                    end
-                end
-                return false
-            end
-            
-            local function getMinCPInGroup(player)
-                local character = player.Character
-                local minCP     = getCPNumber(player)
-                if not character then return minCP end
-                for _, other in ipairs(Players:GetPlayers()) do
-                    if other == player then continue end
-                    local otherChar = other.Character
-                    if not otherChar then continue end
-                    if areCharactersWelded(character, otherChar) then
-                        local n = getCPNumber(other)
-                        if n < minCP then minCP = n end
-                    end
-                end
-                return minCP
-            end
+
             
             local function setupCheckpointSystem()
                 local summitkitFolder = workspace:WaitForChild("AllPartSummitkitJeky", 10)

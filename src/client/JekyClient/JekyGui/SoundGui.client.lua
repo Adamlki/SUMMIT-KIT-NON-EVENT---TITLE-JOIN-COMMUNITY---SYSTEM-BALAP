@@ -5,6 +5,10 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 -- Setup Suara (Ganti ID dengan ID Audio Roblox yang kamu inginkan)
+if playerGui:GetAttribute("SoundEffectsEnabled") == nil then
+	playerGui:SetAttribute("SoundEffectsEnabled", true)
+end
+
 local hoverSound = Instance.new("Sound")
 hoverSound.SoundId = "rbxassetid://117649901456711" 
 hoverSound.Parent = SoundService
@@ -23,11 +27,15 @@ local function applySound(element)
 		end
 		
 		element.MouseEnter:Connect(function()
-			hoverSound:Play()
+			if playerGui:GetAttribute("SoundEffectsEnabled") then
+				hoverSound:Play()
+			end
 		end)
 		
 		element.MouseButton1Click:Connect(function()
-			clickSound:Play()
+			if playerGui:GetAttribute("SoundEffectsEnabled") then
+				clickSound:Play()
+			end
 		end)
 	end
 end

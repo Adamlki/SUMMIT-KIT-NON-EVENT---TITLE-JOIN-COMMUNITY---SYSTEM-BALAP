@@ -11,8 +11,8 @@ JekyConfig.SPEEDRUN_MIN_TIME   = 120
 JekyConfig.SKIP_CHECKPOINT     = false
  
 JekyConfig.SUMMIT_REWARDS = {
-	Summit     = 1,
-	ApexSummit = 2
+	Summit     = 5,
+	ApexSummit = 50
 }
 
 -- DataStoreKeys have been moved to JekyDSKeys.lua to prevent cyclic dependency.
@@ -35,8 +35,8 @@ JekyConfig.COMMAND_ACCESS = {
 	Admin = {
 		_Add = true, _R = true, _Gift = true, _DVip = true,
 		_AddVerified = true, _DVerified = true, _AddRole = true, _RemoveRole = true, _RSpeed = true
-	}
-	-- Moderator dan Streamer tidak perlu ditulis karena tidak punya akses sama sekali
+	},
+	-- Admin, Moderator, dan Streamer tidak perlu ditulis karena tidak punya akses sama sekali
 }
  
 game:GetService("Players").RespawnTime = 2

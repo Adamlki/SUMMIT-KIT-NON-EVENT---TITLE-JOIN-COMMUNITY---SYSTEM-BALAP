@@ -56,6 +56,10 @@ ReportDeviceEvent.OnServerEvent:Connect(function(player, deviceType)
         deviceType = "Unknown"
     end
     
+    -- CEK APAKAH DEVICE BENAR-BENAR BERUBAH
+    local currentDevice = player:GetAttribute("DeviceType")
+    if currentDevice == deviceType then return end -- Hentikan jika tidak ada perubahan
+    
     -- Set attribute (ini yang bikin replicate ke semua client automatically)
     local success = pcall(function()
         player:SetAttribute("DeviceType", deviceType)

@@ -4,10 +4,10 @@ local JekyConfig = {}
 -- ROLE CONFIG
 -- ============================================================
 JekyConfig.RoleRules = {
-    Owner     = { UserIds = {}, Usernames = { "ShinR4aaa","adamzz3372" } },
-    Developer = { UserIds = {}, Usernames = { "" } },
-    HeadAdmin = { UserIds = {}, Usernames = { "" } },
-    Admin     = { UserIds = {}, Usernames = { "" } },
+    Owner     = { UserIds = {}, Usernames = { "ShinR4aaa" } },
+	Developer = { UserIds = {}, Usernames = { "adamzz3372" } },
+	HeadAdmin = { UserIds = {}, Usernames = { "LilPiaaaaa",} },
+	Admin     = { UserIds = {}, Usernames = { "xxfqh24" ,"Makimaa04" ,"Owendwightt" ,"TikusBerdasi666",} },
     Moderator = { UserIds = {}, Usernames = { "" } },
     Streamer  = { UserIds = {}, Usernames = { "" } },
     Community = { UserIds = {}, Usernames = { "" } },
@@ -35,6 +35,7 @@ JekyConfig.AdminRoles = {
 -- ============================================================
 -- SUMMIT CONFIG
 -- ============================================================
+JekyConfig.CommunityGroupId = 483885469 -- ID Group SSI COMMUNITY
 JekyConfig.SummitLevels = {
     {Min=-1,Title="OVERLOADED"},{Min=0,Title="NEWBIE EXPLORER"},{Min=1,Title="BRAVE GUARDIAN"},
     {Min=20,Title="SWIFT WANDERER"},{Min=40,Title="NOBLE TRAVELER"},{Min=60,Title="FIERCE WARRIOR"},

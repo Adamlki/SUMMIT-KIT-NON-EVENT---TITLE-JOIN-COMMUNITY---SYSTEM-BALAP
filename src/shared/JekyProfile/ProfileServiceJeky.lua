@@ -801,11 +801,12 @@ local function safeSet(store, key, value)
                                                                                                     local store = getStore(GLBL_STORE, true)
                                                                                                     local key   = "Summit"..userId
                                                                                                     pcall(function()
-                                                                                                        store:UpdateAsync(key, function(current)
-                                                                                                            local cur    = current or 0
-                                                                                                            local newVal = math.floor(total)
-                                                                                                            return (newVal ~= cur) and newVal or nil
-                                                                                                        end)
+																											store:UpdateAsync(key, function(current)
+																												local cur    = current or 0
+																												local newVal = math.floor(total)
+																												return (newVal ~= cur) and newVal or nil
+																											end)
+
                                                                                                     end)
                                                                                                     for _, e in ipairs(glbCache) do
                                                                                                         if e.UserId == userId then
@@ -886,11 +887,12 @@ local function safeSet(store, key, value)
                                                                                                                     
                                                                                                                     if total > 0 then
                                                                                                                         local ok = pcall(function()
-                                                                                                                            store:UpdateAsync(key, function(current)
-                                                                                                                                local cur    = current or 0
-                                                                                                                                local newVal = total
-                                                                                                                                return (newVal ~= cur) and newVal or nil
-                                                                                                                            end)
+																																store:UpdateAsync(key, function(current)
+																																	local cur    = current or 0
+																																	local newVal = total
+																																	return (newVal ~= cur) and newVal or nil
+																																end)
+
                                                                                                                         end)
                                                                                                                         if ok then syncCount = syncCount + 1 end
                                                                                                                     else

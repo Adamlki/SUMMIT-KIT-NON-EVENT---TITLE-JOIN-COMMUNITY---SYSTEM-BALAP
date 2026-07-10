@@ -61,7 +61,8 @@ if statuesFolder and billboardTemplate then
 		if dummy then
 			cachedDummies[i] = {
 				Model = dummy,
-				OriginalCFrame = dummy:GetPivot()
+				OriginalCFrame = dummy:GetPivot(),
+                CurrentUserId = nil
 			}
 			dummy.Parent = nil -- Sembunyikan di awal
 		end
@@ -98,6 +99,17 @@ local function updateStatue(rank, userId, displayName, totalDonated)
 
 	local dummyCache = cachedDummies[rank]
 	if not dummyCache then return end
+    
+    -- Cek jika UserId masih sama, update Text labelnya saja, abaikan ApplyDescription
+    if dummyCache.CurrentUserId == userId then
+        local gui = dummyCache.Model:FindFirstChild("DonationBillboardGui")
+        if gui and gui:FindFirstChild("MainFrame") then
+            gui.MainFrame.Value.Text = tostring(totalDonated) .. " Robux"
+        end
+        return 
+    end
+    
+    dummyCache.CurrentUserId = userId -- Simpan UserId baru
 	
 	local dummy = dummyCache.Model
 	dummy.Parent = statuesFolder -- Munculkan patung

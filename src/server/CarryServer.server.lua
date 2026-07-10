@@ -17,6 +17,7 @@ CarryRemote.Name = REMOTE_NAME
 CarryRemote.Parent = ReplicatedStorage
 
 -- Config
+local charConnections = {}
 local PENDING_TIMEOUT = 8
 local MAX_DISTANCE = 20
 local MAX_CARRY = 20 -- Max players per carry
@@ -445,10 +446,20 @@ end
                         carriedByTarget[target.UserId] = carrier
                         
                         local function bindCleanupForCharacter(char: Instance, p: Player)
-                            local hum = char:FindFirstChildOfClass("Humanoid")
-                            if hum then hum.Died:Connect(function() safeDetachIfAny(p, "death") end) end
-                            char.AncestryChanged:Connect(function(_, parent) if not parent then safeDetachIfAny(p, "character removed") end end)
+                            -- Putuskan koneksi lama jika ada (Mencegah Memory Leak)
+                            if charConnections[p.UserId] then
+                                for _, conn in ipairs(charConnections[p.UserId]) do conn:Disconnect() end
                             end
+                            charConnections[p.UserId] = {}
+
+                            local hum = char:FindFirstChildOfClass("Humanoid")
+                            if hum then 
+                                table.insert(charConnections[p.UserId], hum.Died:Connect(function() safeDetachIfAny(p, "death") end)) 
+                            end
+                            table.insert(charConnections[p.UserId], char.AncestryChanged:Connect(function(_, parent) 
+                                if not parent then safeDetachIfAny(p, "character removed") end 
+                            end))
+                        end
                                 bindCleanupForCharacter(cChar, carrier)
                                 bindCleanupForCharacter(tChar, target)
                                 

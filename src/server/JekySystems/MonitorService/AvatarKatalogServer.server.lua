@@ -12,11 +12,17 @@ ChangeAvatarEvent.Parent = ReplicatedStorage
 local ResetAvatarEvent = Instance.new("RemoteEvent")
 ResetAvatarEvent.Name = "ResetAvatarEvent"
 ResetAvatarEvent.Parent = ReplicatedStorage
+
+local RestoreTitleEvent = ReplicatedStorage:FindFirstChild("RestoreTitleEvent") or Instance.new("BindableEvent")
+RestoreTitleEvent.Name = "RestoreTitleEvent"
+RestoreTitleEvent.Parent = ReplicatedStorage
  
 -- ============================================
 -- PLAYER DATA STORAGE
 -- ============================================
 local playerData = {}
+local avatarCooldowns = {}
+local COOLDOWN_TIME = 3
  
 -- ============================================
 -- TOOL HANDLER
@@ -91,6 +97,7 @@ local function changeAvatar(player, targetUserId)
     
     if success and description then
         humanoid:ApplyDescription(description)
+        RestoreTitleEvent:Fire(player)
         -- forceAttachTitle di TitleGiver otomatis restore billboard
         -- Equip kembali tool yang tadi di-unequip
         task.spawn(function()
@@ -123,6 +130,7 @@ local function resetAvatar(player)
     
     if success and description then
         humanoid:ApplyDescription(description)
+        RestoreTitleEvent:Fire(player)
         -- forceAttachTitle di TitleGiver otomatis restore billboard
         task.spawn(function()
             reequipTool(player, equippedTool)
@@ -151,12 +159,24 @@ end)
 -- EVENT HANDLERS
 -- ============================================
 ChangeAvatarEvent.OnServerEvent:Connect(function(player, targetUserId)
+    local now = os.clock()
+    if avatarCooldowns[player.UserId] and (now - avatarCooldowns[player.UserId]) < COOLDOWN_TIME then
+        return -- Abaikan jika belum lewat 3 detik
+    end
+    avatarCooldowns[player.UserId] = now
+
     if typeof(targetUserId) == "number" then
         changeAvatar(player, targetUserId)
     end
 end)
  
 ResetAvatarEvent.OnServerEvent:Connect(function(player)
+    local now = os.clock()
+    if avatarCooldowns[player.UserId] and (now - avatarCooldowns[player.UserId]) < COOLDOWN_TIME then
+        return
+    end
+    avatarCooldowns[player.UserId] = now
+
     resetAvatar(player)
 end)
  

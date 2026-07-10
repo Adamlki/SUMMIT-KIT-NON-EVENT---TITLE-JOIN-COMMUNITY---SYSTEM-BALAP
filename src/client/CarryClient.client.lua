@@ -230,7 +230,7 @@ local function setModeStatusCarried(carrierName, carrierId)
 	currentCarrierName = carrierName
 	isCarried = true
 	updateCarriedUI()
-	startKeepUi()
+	-- startKeepUi()
 	startBlockingJump()
 end
 

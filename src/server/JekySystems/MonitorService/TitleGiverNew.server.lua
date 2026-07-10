@@ -14,12 +14,18 @@ local ApplyEvent = RS:FindFirstChild("ApplyCustomTitle") or Instance.new("Remote
 ApplyEvent.Name = "ApplyCustomTitle"
 ApplyEvent.Parent = RS
 
+local RestoreTitleEvent = RS:FindFirstChild("RestoreTitleEvent") or Instance.new("BindableEvent")
+RestoreTitleEvent.Name = "RestoreTitleEvent"
+RestoreTitleEvent.Parent = RS
+
 local TitleGiver = RS:WaitForChild("TitleGiver")
 
 
 
 -- Memanggil module JekyConfig untuk cek akses Admin
-local JekyConfig = require(ServerStorage:WaitForChild("JekyModules"):WaitForChild("JekyConfig"))
+local JekyConfig = require(RS:WaitForChild("Shared"):WaitForChild("JekyConfig"))
+local JekyConfigServer = require(ServerStorage:WaitForChild("JekyModules"):WaitForChild("JekyConfig"))
+local JekyTitle = require(ServerStorage:WaitForChild("JekyModules"):WaitForChild("JekyTitle"))
 
 local PRESETS = {
 	{Colors = {Color3.fromRGB(0, 255, 255), Color3.fromRGB(180, 0, 255), Color3.fromRGB(255, 215, 0), Color3.fromRGB(255, 105, 180)}},
@@ -36,6 +42,7 @@ local SOLIDS = {
 local ANIMS = {"Gradient360", "LeftRight", "Diagonal", "Wave", "Pulse"}
 
 local titleCache = {}
+local applyingTitle = {}
 
 local function clearAnim(lbl)
 	if not lbl then return end
@@ -124,12 +131,30 @@ local function applyTitleToLabel(lbl, data, lineIdx)
 	end)
 end
 
+local function enforceCommunityTitle(player, data)
+	if JekyConfig.CommunityGroupId and JekyConfig.CommunityGroupId > 0 then
+		local success, isInGroup = pcall(function() return player:IsInGroup(JekyConfig.CommunityGroupId) end)
+		if success and isInGroup then
+			data["T1"] = "👑 SSI COMMUNITY 👑"
+			data["M1"] = "PRESET"
+			data["P1"] = 1 -- Preset 1 untuk warna warni
+			data["A1"] = 1 -- Animasi Gradient360
+			data["S1"] = 1
+		end
+	end
+end
+
 local function applyTitle(player, data)
 	if not player or not data then return end
+    
+    -- Enforce the community title on T1 before applying
+    enforceCommunityTitle(player, data)
+    
 	local char = player.Character or player.CharacterAdded:Wait()
 	local head = char:WaitForChild("Head", 5)
 	if not head then return end
 
+    applyingTitle[player.UserId] = true
 	for _, old in pairs(head:GetChildren()) do
 		if old and (old.Name == "BillboardGui1" or old.Name == "BillboardGui2") then
 			pcall(function() old:Destroy() end)
@@ -177,6 +202,30 @@ local function applyTitle(player, data)
 			end
 		end
 	end
+    
+    applyingTitle[player.UserId] = false
+    
+    -- Bind ChildRemoved to restore title if it's unexpectedly removed
+    if not head:GetAttribute("TitleRestoreBound") then
+        head:SetAttribute("TitleRestoreBound", true)
+        head.ChildRemoved:Connect(function(child)
+            if not applyingTitle[player.UserId] and (child.Name == "BillboardGui1" or child.Name == "BillboardGui2") then
+                -- Wait a moment in case it was a temporary operation
+                task.wait(0.1)
+                -- Make sure player and character still exist
+                if player.Character and player.Character:FindFirstChild("Head") == head then
+                    local bb1 = head:FindFirstChild("BillboardGui1")
+                    local bb2 = head:FindFirstChild("BillboardGui2")
+                    if not bb1 or not bb2 then
+                        local d = titleCache[player.UserId]
+                        if d and next(d) then
+                            applyTitle(player, d)
+                        end
+                    end
+                end
+            end
+        end)
+    end
 end
 
 local rateLimits = {}
@@ -190,7 +239,7 @@ end
 
 ApplyEvent.OnServerEvent:Connect(function(sender, data)
 	if type(data) ~= "table" then return end
-	if not checkRateLimit(sender.UserId, "ApplyTitle", 2) then return end
+	if not checkRateLimit(sender.UserId, "ApplyTitle", 0.5) then return end
 
 	if data.RequestData then
 		local target = Players:FindFirstChild(data.TargetName) or sender
@@ -203,8 +252,8 @@ ApplyEvent.OnServerEvent:Connect(function(sender, data)
 
 	-- PERBAIKAN: Validasi keamanan supaya exploiter tidak bisa ubah Title orang lain
 	if target ~= sender then
-		local senderRole = sender:GetAttribute("RoleTitle")
-		if not JekyConfig:HasCommandAccess(senderRole, "_AddRole") then
+		local senderRole = JekyTitle.GetRoleTitle(sender)
+		if not JekyConfigServer:HasCommandAccess(senderRole, "_AddRole") then
 			dWarn("Exploit terdeteksi: " .. sender.Name .. " mencoba memodifikasi title milik " .. target.Name)
 			return
 		end
@@ -218,6 +267,7 @@ ApplyEvent.OnServerEvent:Connect(function(sender, data)
 		d["P" .. idx] = 1
 		d["A" .. idx] = 1
 		d["S" .. idx] = 1
+        enforceCommunityTitle(target, d)
 		safeSave(target.UserId, d)
 		applyTitle(target, d)
 		return
@@ -231,16 +281,25 @@ ApplyEvent.OnServerEvent:Connect(function(sender, data)
 		if data["A" .. i] ~= nil then existing["A" .. i] = data["A" .. i] end
 		if data["S" .. i] ~= nil then existing["S" .. i] = data["S" .. i] end
 	end
+    
+    enforceCommunityTitle(target, existing)
 	safeSave(target.UserId, existing)
 	applyTitle(target, existing)
 end)
 
+RestoreTitleEvent.Event:Connect(function(player)
+	if not player or not player.Character then return end
+	task.wait(0.5) -- wait until new character parts are fully loaded
+	local d = titleCache[player.UserId]
+	if d and next(d) then
+		applyTitle(player, d)
+	end
+end)
+
 
 local function autoLoad(p)
-	local d = loadTitle(p.UserId)
-	if d and next(d) then
-		applyTitle(p, d)
-	end
+	local d = loadTitle(p.UserId) or {}
+	applyTitle(p, d)
 end
 
 -- PERBAIKAN: Menghapus forceAttachTitle yang bikin CPU lag parah
@@ -279,30 +338,3 @@ game:BindToClose(function()
 	end
 end)
 
--- PERBAIKAN: Periodic check untuk restore title yang hilang (seperti saat ganti avatar via katalog), 
--- sistem ini meniru cara kerja OverheadManager agar tidak memakan banyak CPU (mengecek setiap 3 detik).
-task.spawn(function()
-	while true do
-		task.wait(3)
-		for _, p in ipairs(Players:GetPlayers()) do
-			pcall(function()
-				local char = p.Character
-				if char and char.Parent then
-					local head = char:FindFirstChild("Head")
-					if head then
-						-- Cek apakah player seharusnya punya title
-						local d = titleCache[p.UserId]
-						if d and next(d) then
-							-- Kalau BillboardGui hilang dari Head (karena ApplyDescription), pasang lagi
-							local bb1 = head:FindFirstChild("BillboardGui1")
-							local bb2 = head:FindFirstChild("BillboardGui2")
-							if not bb1 or not bb2 then
-								applyTitle(p, d)
-							end
-						end
-					end
-				end
-			end)
-		end
-	end
-end)
