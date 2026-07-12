@@ -28,21 +28,21 @@ local RacePositionsUpdate = remotesFolder:WaitForChild("RacePositionsUpdate")
 local RaceAdminNotif = remotesFolder:WaitForChild("RaceAdminNotif")
 
 -- UI Elements
-local IsiGui = PlayerGui:WaitForChild("IsiGui", 10)
-local ListGui = PlayerGui:WaitForChild("ListGui", 10)
+local IsiGui = PlayerGui:WaitForChild("IsiGui", 999999)
+local ListGui = PlayerGui:WaitForChild("ListGui", 999999)
 
 if not IsiGui or not ListGui then
     warn("Race System: Could not find IsiGui or ListGui.")
     return
 end
 
-local RaceSystemFrame = IsiGui:WaitForChild("RaceSystemFrame", 10)
-local MainFrame = RaceSystemFrame and RaceSystemFrame:WaitForChild("MainFrameRaceSystem", 10)
-local RankingFrame = RaceSystemFrame and RaceSystemFrame:WaitForChild("RankingFrame", 10)
+local RaceSystemFrame = IsiGui:WaitForChild("RaceSystemFrame", 999999)
+local MainFrame = RaceSystemFrame:WaitForChild("MainFrameRaceSystem", 999999)
+local RankingFrame = RaceSystemFrame:WaitForChild("RankingFrame", 999999)
 local RaceButton = ListGui:FindFirstChild("RaceButton", true) -- It's deep in ListGui maybe?
 
 -- Hide notification templates initially
-local summitGui = PlayerGui:WaitForChild("SummitGUI", 10)
+local summitGui = PlayerGui:WaitForChild("SummitGUI", 999999)
 if summitGui then
     local notifRace = summitGui:FindFirstChild("NotifRace")
     if notifRace then
@@ -170,6 +170,16 @@ if MainFrame then
                 showAdminNotifLocal("⚠️ FAILED: PLEASE INPUT A NUMBER FOR COUNTDOWN!")
                 return
             end
+            
+            if currentRaceState ~= "NotStarted" then
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Race Started",
+                    Text = "Race sudah dimulai! Silakan klik RESET terlebih dahulu sebelum memulai ulang.",
+                    Duration = 5
+                })
+                return
+            end
+            
             RaceAction:FireServer({ action = "Start", countdown = countdown })
         end)
     end
@@ -257,9 +267,28 @@ end
 
 local notifiedPlayers = {}
 
+local currentRaceState = "NotStarted"
+local globalTrackEnabled = false
+
 -- Listen to State
 RaceStateUpdate.OnClientEvent:Connect(function(data)
+    if data.type == "TrackUpdate" then
+        globalTrackEnabled = data.trackEnabled
+        
+        if not globalTrackEnabled then
+            -- Clear current track UI if disabled
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p.Character and p.Character:FindFirstChild("Head") then
+                    local tag = p.Character.Head:FindFirstChild("TamplateTrack")
+                    if tag then tag:Destroy() end
+                end
+            end
+        end
+        return
+    end
+
     local state = data.state
+    currentRaceState = state
     
     if state == "Countdown" or state == "NotStarted" or state == "Stopped" then
         notifiedPlayers = {}
@@ -359,7 +388,17 @@ local function getColorForRank(pos)
 end
 
 -- Listen to Positions Update
-RacePositionsUpdate.OnClientEvent:Connect(function(positionsData)
+RacePositionsUpdate.OnClientEvent:Connect(function(payload)
+    -- Parse payload
+    local positionsData = payload.positions or {}
+    globalTrackEnabled = payload.trackEnabled or false
+    
+    if payload.positions == nil and typeof(payload) == "table" and #payload == 0 then
+        -- This is a reset packet (empty array) sent directly
+        positionsData = {}
+        globalTrackEnabled = false
+    end
+    
     -- Update RankingFrame UI
     if RankingFrame then
         local scrollFrame = RankingFrame:FindFirstChild("ScrollingFrame")
@@ -461,7 +500,7 @@ RacePositionsUpdate.OnClientEvent:Connect(function(positionsData)
     end
     
     -- Update Overhead Tags
-    if trackEnabled then
+    if globalTrackEnabled then
         if #positionsData == 0 then
             -- Clear all tags if we get empty data (reset)
             for _, p in ipairs(Players:GetPlayers()) do
@@ -491,6 +530,13 @@ RacePositionsUpdate.OnClientEvent:Connect(function(positionsData)
                             tag = templateTrack:Clone()
                             tag.Adornee = head
                             tag.Parent = head
+                        end
+                        
+                        -- Hide if user disabled overhead tags
+                        if _G.isHideTitle then
+                            tag.Enabled = false
+                        else
+                            tag.Enabled = true
                         end
                         
                         local nameLabel = tag:FindFirstChild("Name")

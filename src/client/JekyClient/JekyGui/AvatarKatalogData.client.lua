@@ -2,10 +2,11 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
- 
+local BundleList = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("BundleList"))
+
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
- 
+
 -- ============================================
 -- AVATAR DATA (USER ID) - MIXED 50 TOTAL
 -- ============================================
@@ -21,6 +22,8 @@ local AVATAR_LIST = {
     8936833167, 8792379592, 7260068521, 9387216928,
     8346379536, 9397013343, 9173293538, 9269235517,
     1125045383, 9619111386, 3060549723, 8653021426,
+    7779810863, 8978251546, 8995081216, 8383397608,
+    5761318042, 8384430762, 10179011419,3504674222,
     
     -- Cewek (20)
     9181935703, 7843828496, 3226668321, 9201287345,
@@ -29,28 +32,54 @@ local AVATAR_LIST = {
     8919260507, 9200798149, 9473909909, 8985697634,
     8648877923, 9025127598, 9046872011, 8989241684
 }
- 
+
+-- ============================================
+-- ANIMATION IMAGE DATA
+-- ============================================
+-- Masukkan ID Image untuk masing-masing kategori di bawah ini:
+local CATEGORY_IMAGE_IDS = {
+    Bandle = "rbxassetid://85636939460092",
+    Climb = "rbxassetid://70618576227992",
+    Fall = "rbxassetid://106721127126025",
+    Idle = "rbxassetid://132122935420335",
+    Jump = "rbxassetid://111609213402233",
+    Run = "rbxassetid://134863309474341",
+    Swim = "rbxassetid://81938921882443",
+    Walk = "rbxassetid://75959277338553",
+}
+
 -- ============================================
 -- VARIABLES
 -- ============================================
-local ListGui, AvatarButton
+local ListGui, AvatarButtonToggle
 local IsiGui, AvatarPanel
 local SearchTextBox, SearchButton, CloseButton
-local ScrollingFrame, PreviewLabel, ApplyButton, RemoveButton
- 
+local AvatarCatalog, AnimationCatalog, ButtonMenuFrame
+local MenuAnimationButton, MenuAvatarButton
+
+-- Avatar Variables
+local AvatarScrollingFrame, PreviewLabel, ApplyButton, RemoveButton
 local selectedUserId = nil
 local currentAppliedAvatar = nil
+
+-- Animation Variables
+local AnimButtonFrame, AnimScrollingFrame, AnimTamplateButton, AnimTextBox, AnimSearchButton
+local ResetAnimationBtn
+local currentAnimCategory = "Bandle"
+local currentSelectedAnims = {} -- { [category] = id }
+local defaultAnimBtnColor = Color3.fromRGB(255, 255, 255)
+
 local isPanelOpen = false
- 
+
 local originalPosition
 local hiddenPosition
 local tweenInfo = TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
- 
+
 -- RemoteEvents
-local ChangeAvatarEvent, ResetAvatarEvent
- 
+local ChangeAvatarEvent, ResetAvatarEvent, ApplyAnimationEvent
+
 -- ============================================
--- UPDATE BUTTON VISIBILITY & TEXT
+-- UPDATE BUTTON VISIBILITY & TEXT (AVATAR)
 -- ============================================
 local function updateButtons()
     if not ApplyButton or not RemoveButton then return end
@@ -64,9 +93,9 @@ local function updateButtons()
     ApplyButton.Visible = true
     RemoveButton.Visible = true
 end
- 
+
 -- ============================================
--- UPDATE PREVIEW LABEL
+-- UPDATE PREVIEW LABEL (AVATAR)
 -- ============================================
 local function updatePreview(userId)
     if not PreviewLabel then return end
@@ -87,28 +116,28 @@ local function updatePreview(userId)
         end
     end)
 end
- 
+
 -- ============================================
--- UPDATE BUTTON STATES
+-- UPDATE BUTTON STATES (AVATAR)
 -- ============================================
-local function updateButtonStates(clickedImageLabel)
-    for i = 1, 50 do
-        local imageLabel = ScrollingFrame:FindFirstChild("ImageLabel" .. i)
-        if imageLabel then
-            local textButton = imageLabel:FindFirstChild("TextButton")
-            if textButton then
-                if imageLabel == clickedImageLabel then
-                    textButton.Text = "Dilihat"
-                else
-                    textButton.Text = "Melihat"
-                end
+local function updateButtonStates()
+    local AvatarTamplateButton = AvatarScrollingFrame:FindFirstChild("TamplateButton")
+    local defaultColor = AvatarTamplateButton and AvatarTamplateButton.BackgroundColor3 or Color3.fromRGB(255, 255, 255)
+    
+    for _, btn in ipairs(AvatarScrollingFrame:GetChildren()) do
+        if btn:IsA("TextButton") and btn.Name == "AvatarItem" then
+            local idAttr = btn:GetAttribute("UserId")
+            if idAttr == selectedUserId then
+                btn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+            else
+                btn.BackgroundColor3 = defaultColor
             end
         end
     end
 end
- 
--- ============================================
--- SEARCH USERNAME
+
+-- ============================================================
+-- SEARCH USERNAME (AVATAR)
 -- ============================================
 local function searchUsername()
     local username = SearchTextBox.Text:gsub("%s+", "")
@@ -121,6 +150,7 @@ local function searchUsername()
     if success and userId then
         selectedUserId = userId
         updatePreview(userId)
+        updateButtonStates()
         updateButtons()
     else
         SearchTextBox.PlaceholderText = "User not found"
@@ -130,7 +160,179 @@ local function searchUsername()
     
     SearchTextBox.Text = ""
 end
- 
+
+-- ============================================
+-- ANIMATION LOGIC
+-- ============================================
+
+local function applyBundle(bundleId, bundleName)
+    local char = player.Character
+    if not char then return end
+
+    if ApplyAnimationEvent then
+        ApplyAnimationEvent:FireServer({type = "Bundle", id = bundleId, name = bundleName})
+    end
+end
+
+local function applyAnimation(category, animId)
+    local char = player.Character
+    if not char then return end
+    
+    if ApplyAnimationEvent then
+        ApplyAnimationEvent:FireServer({type = "Single", category = category, id = animId})
+    end
+end
+
+local currentLoadThread = nil
+
+local function loadAnimationList(category, searchTerm)
+    if not AnimScrollingFrame then 
+        warn("[AvatarKatalog] AnimScrollingFrame is nil!")
+        return 
+    end
+    if not AnimTamplateButton then 
+        warn("[AvatarKatalog] AnimTamplateButton is nil! ScrollingFrame children: ")
+        for _, v in ipairs(AnimScrollingFrame:GetChildren()) do
+            print(" - " .. v.Name)
+        end
+        return 
+    end
+    
+    -- Batalkan pemuatan sebelumnya jika ada (biar tidak tumpang tindih)
+    if currentLoadThread then
+        task.cancel(currentLoadThread)
+    end
+    
+    currentAnimCategory = category
+    
+    if AnimButtonFrame then
+        for _, btn in ipairs(AnimButtonFrame:GetChildren()) do
+            if btn:IsA("TextButton") then
+                if btn.Name == category .. "Button" then
+                    btn.TextColor3 = Color3.fromRGB(0, 255, 0)
+                else
+                    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                end
+            end
+        end
+    end
+    
+    if AnimTextBox then
+        AnimTextBox.PlaceholderText = "Loading..."
+    end
+    
+    currentLoadThread = task.spawn(function()
+        -- Hapus item saat ini
+        for _, child in ipairs(AnimScrollingFrame:GetChildren()) do
+            if child:IsA("TextButton") and child.Name == "AnimItem" then
+                child:Destroy()
+            end
+        end
+        
+        -- Berikan jeda kecil agar game sempat membersihkan frame sebelum membuat baru
+        task.wait()
+        
+        local imageId = CATEGORY_IMAGE_IDS[category] or ""
+        local itemsCreated = 0
+        local BATCH_SIZE = 15 -- Jumlah tombol yang dibuat per frame (biar gak patah-patah)
+        
+        for i, bundleData in ipairs(BundleList) do
+            local bundleName = bundleData.Name
+            local bundleId = bundleData.Id
+            
+            if not searchTerm or searchTerm == "" or string.find(string.lower(bundleName), string.lower(searchTerm)) then
+                local btn = AnimTamplateButton:Clone()
+                btn.Name = "AnimItem"
+                btn.Visible = true
+                btn.LayoutOrder = i
+                
+                -- Untuk menu single, ID tidak perlu pakai prefix kategori karena table sudah dipisah
+                local uniqueId = tostring(bundleId)
+                btn:SetAttribute("AnimId", uniqueId)
+                
+                if currentSelectedAnims[category] == uniqueId then
+                    btn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                else
+                    btn.BackgroundColor3 = defaultAnimBtnColor
+                end
+                
+                local img = btn:FindFirstChild("ImageLabel")
+                local txt = btn:FindFirstChild("TextLabel")
+                
+                if img then img.Image = imageId end
+                if txt then txt.Text = bundleName end
+                
+                btn.MouseButton1Click:Connect(function()
+                    if currentSelectedAnims[category] == uniqueId then
+                        -- Unequip (Lepas)
+                        if category == "Bandle" then
+                            if ApplyAnimationEvent then
+                                ApplyAnimationEvent:FireServer({type = "Reset"})
+                            end
+                        else
+                            if ApplyAnimationEvent then
+                                ApplyAnimationEvent:FireServer({type = "UnequipSingle", category = category})
+                            end
+                        end
+                    else
+                        -- Equip (Pasang)
+                        if category == "Bandle" then
+                            applyBundle(bundleId, bundleName)
+                        else
+                            if ApplyAnimationEvent then
+                                ApplyAnimationEvent:FireServer({type = "SingleBundle", category = category, id = bundleId, name = bundleName})
+                            end
+                        end
+                    end
+                end)
+                
+                btn.Parent = AnimScrollingFrame
+                itemsCreated = itemsCreated + 1
+                
+                if itemsCreated % BATCH_SIZE == 0 then
+                    task.wait()
+                end
+            end
+        end
+        
+        AnimScrollingFrame.CanvasPosition = Vector2.new(0, 0)
+        
+        -- Kembalikan teks placeholder
+        if AnimTextBox then
+            AnimTextBox.PlaceholderText = "Search..."
+        end
+    end)
+end
+
+-- ============================================
+-- TOGGLE TABS
+-- ============================================
+local function switchTab(tabName)
+    if not AvatarCatalog or not AnimationCatalog then return end
+    
+    if tabName == "Avatar" then
+        AvatarCatalog.Visible = true
+        AnimationCatalog.Visible = false
+        if MenuAvatarButton then
+            MenuAvatarButton.BackgroundColor3 = Color3.fromRGB(150, 150, 150) -- Active color
+        end
+        if MenuAnimationButton then
+            MenuAnimationButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Inactive color
+        end
+    elseif tabName == "Animation" then
+        AvatarCatalog.Visible = false
+        AnimationCatalog.Visible = true
+        if MenuAnimationButton then
+            MenuAnimationButton.BackgroundColor3 = Color3.fromRGB(150, 150, 150) -- Active color
+        end
+        if MenuAvatarButton then
+            MenuAvatarButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Inactive color
+        end
+        -- Load Bandle by default when switching to Animation
+        loadAnimationList("Bandle")
+    end
+end
+
 -- ============================================
 -- OPEN/CLOSE PANEL
 -- ============================================
@@ -139,8 +341,8 @@ function openPanel()
     AvatarPanel.Visible = true
     TweenService:Create(AvatarPanel, tweenInfo, {Position = originalPosition}):Play()
     
-    if AvatarButton then
-        TweenService:Create(AvatarButton, TweenInfo.new(0.2), {
+    if AvatarButtonToggle then
+        TweenService:Create(AvatarButtonToggle, TweenInfo.new(0.2), {
         BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         }):Play()
     end
@@ -154,14 +356,17 @@ function openPanel()
     end
     
     updateButtons()
+    
+    -- Default open in AvatarCatalog
+    switchTab("Avatar")
 end
- 
+
 function closePanel()
     isPanelOpen = false
     TweenService:Create(AvatarPanel, tweenInfo, {Position = hiddenPosition}):Play()
     
-    if AvatarButton then
-        TweenService:Create(AvatarButton, TweenInfo.new(0.2), {
+    if AvatarButtonToggle then
+        TweenService:Create(AvatarButtonToggle, TweenInfo.new(0.2), {
         BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         }):Play()
     end
@@ -169,7 +374,7 @@ function closePanel()
     task.wait(0.35)
     AvatarPanel.Visible = false
 end
- 
+
 -- ============================================
 -- APPLY AVATAR
 -- ============================================
@@ -189,7 +394,7 @@ local function applyAvatar()
     task.wait(0.5)
     closePanel()
 end
- 
+
 -- ============================================
 -- REMOVE AVATAR (RESET TO ORIGINAL)
 -- ============================================
@@ -207,36 +412,55 @@ local function removeAvatar()
     task.wait(0.5)
     closePanel()
 end
- 
+
 -- ============================================
--- SETUP IMAGE LABELS
+-- SETUP IMAGE LABELS (AVATAR)
 -- ============================================
 local function setupImageLabels()
-    for i = 1, 50 do
-        local imageLabel = ScrollingFrame:FindFirstChild("ImageLabel" .. i)
-        if imageLabel then
-            local userId = AVATAR_LIST[i]
-            
-            if userId then
-                imageLabel.Image = "rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=150&h=150"
-                
-                local textButton = imageLabel:FindFirstChild("TextButton")
-                if textButton then
-                    textButton.Text = "Melihat"
-                    textButton.MouseButton1Click:Connect(function()
-                        selectedUserId = userId
-                        updatePreview(userId)
-                        updateButtonStates(imageLabel)
-                        updateButtons()
-                    end)
-                end
-            else
-                imageLabel.Visible = false
-            end
+    if not AvatarScrollingFrame then return end
+    
+    local AvatarTamplateButton = AvatarScrollingFrame:FindFirstChild("TamplateButton")
+    if not AvatarTamplateButton then return end
+    AvatarTamplateButton.Visible = false
+    
+    -- Bersihkan sisa-sisa UI lama (seperti ImageLabel1-50) jika user lupa menghapusnya di Studio
+    for _, child in ipairs(AvatarScrollingFrame:GetChildren()) do
+        if child ~= AvatarTamplateButton and not child:IsA("UIGridLayout") and not child:IsA("UIListLayout") and not child:IsA("UIPadding") and not child:IsA("UICorner") then
+            child:Destroy()
         end
     end
+    
+    local defaultColor = AvatarTamplateButton.BackgroundColor3
+    
+    for i, userId in ipairs(AVATAR_LIST) do
+        local btn = AvatarTamplateButton:Clone()
+        btn.Name = "AvatarItem"
+        btn.Visible = true
+        btn.LayoutOrder = i
+        
+        local img = btn:FindFirstChild("ImageLabel")
+        if img then
+            img.Image = "rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=150&h=150"
+        end
+        
+        if selectedUserId == userId then
+            btn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+        else
+            btn.BackgroundColor3 = defaultColor
+        end
+        
+        btn.MouseButton1Click:Connect(function()
+            selectedUserId = userId
+            updatePreview(userId)
+            updateButtonStates()
+            updateButtons()
+        end)
+        
+        btn:SetAttribute("UserId", userId)
+        btn.Parent = AvatarScrollingFrame
+    end
 end
- 
+
 -- ============================================
 -- WAIT FOR GUI ELEMENTS
 -- ============================================
@@ -247,7 +471,7 @@ local function waitForElements()
         if ListGui then
             local listTopBar = ListGui:FindFirstChild("ListTopBar")
             if listTopBar then
-                AvatarButton = listTopBar:FindFirstChild("AvatarButton")
+                AvatarButtonToggle = listTopBar:FindFirstChild("AvatarButton")
             end
         end
         
@@ -256,20 +480,49 @@ local function waitForElements()
             AvatarPanel = IsiGui:FindFirstChild("AvatarPanel")
             
             if AvatarPanel then
-                SearchTextBox = AvatarPanel:FindFirstChild("TextBox")
-                SearchButton = SearchTextBox and SearchTextBox:FindFirstChild("Button")
+                AvatarCatalog = AvatarPanel:FindFirstChild("AvatarCatalog")
+                AnimationCatalog = AvatarPanel:FindFirstChild("AnimationCatalog")
+                ButtonMenuFrame = AvatarPanel:FindFirstChild("ButtonMenuFrame")
                 CloseButton = AvatarPanel:FindFirstChild("CloseButton")
-                ScrollingFrame = AvatarPanel:FindFirstChild("ScrollingFrame")
-                PreviewLabel = AvatarPanel:FindFirstChild("PreviewLabel")
                 
-                if PreviewLabel then
-                    ApplyButton = PreviewLabel:FindFirstChild("ApplyButton")
-                    RemoveButton = PreviewLabel:FindFirstChild("RemoveButton")
-                end
-                
-                if AvatarButton and SearchTextBox and CloseButton
-                    and ScrollingFrame and PreviewLabel and ApplyButton and RemoveButton then
-                    return true
+                if AvatarCatalog and AnimationCatalog and ButtonMenuFrame then
+                    -- Avatar Elements
+                    SearchTextBox = AvatarCatalog:FindFirstChild("TextBox")
+                    if SearchTextBox then
+                        SearchButton = SearchTextBox:FindFirstChild("Button")
+                    end
+                    AvatarScrollingFrame = AvatarCatalog:FindFirstChild("ScrollingFrame")
+                    PreviewLabel = AvatarCatalog:FindFirstChild("PreviewLabel")
+                    
+                    if PreviewLabel then
+                        ApplyButton = PreviewLabel:FindFirstChild("ApplyButton")
+                        RemoveButton = PreviewLabel:FindFirstChild("RemoveButton")
+                    end
+                    
+                    -- Animation Elements
+                    AnimButtonFrame = AnimationCatalog:FindFirstChild("ButtonFrame")
+                    AnimScrollingFrame = AnimationCatalog:FindFirstChild("ScrollingFrame")
+                    AnimTextBox = AnimationCatalog:FindFirstChild("TextBox")
+                    ResetAnimationBtn = AnimationCatalog:FindFirstChild("ResetAnimationBtn")
+                    if AnimTextBox then
+                        AnimSearchButton = AnimTextBox:FindFirstChild("Button")
+                    end
+                    
+                    if AnimScrollingFrame then
+                        AnimTamplateButton = AnimScrollingFrame:FindFirstChild("TamplateButton")
+                        if AnimTamplateButton then 
+                            AnimTamplateButton.Visible = false 
+                            defaultAnimBtnColor = AnimTamplateButton.BackgroundColor3
+                        end
+                    end
+                    
+                    -- Menu Buttons
+                    MenuAnimationButton = ButtonMenuFrame:FindFirstChild("AnimationButton")
+                    MenuAvatarButton = ButtonMenuFrame:FindFirstChild("AvatarButton")
+                    
+                    if AvatarButtonToggle and CloseButton and AvatarScrollingFrame and PreviewLabel and ApplyButton and RemoveButton and AnimTamplateButton then
+                        return true
+                    end
                 end
             end
         end
@@ -280,15 +533,17 @@ local function waitForElements()
     
     return false
 end
- 
+
 -- ============================================
 -- INITIALIZE SYSTEM
 -- ============================================
 local function initializeSystem()
     if not waitForElements() then return end
     
-    ChangeAvatarEvent = ReplicatedStorage:WaitForChild("ChangeAvatarEvent", 999)
-    ResetAvatarEvent = ReplicatedStorage:WaitForChild("ResetAvatarEvent", 999)
+    local RepStorage = game:GetService("ReplicatedStorage")
+    ChangeAvatarEvent = RepStorage:FindFirstChild("ChangeAvatarEvent")
+    ResetAvatarEvent = RepStorage:FindFirstChild("ResetAvatarEvent")
+    ApplyAnimationEvent = RepStorage:FindFirstChild("ApplyAnimationEvent")
     
     if not ChangeAvatarEvent or not ResetAvatarEvent then return end
     
@@ -314,11 +569,46 @@ local function initializeSystem()
     AvatarPanel.Visible = false
     AvatarPanel.Position = hiddenPosition
     
+    -- Setup Notifications
+    local AnimationNotificationEvent = RepStorage:WaitForChild("AnimationNotificationEvent")
+    AnimationNotificationEvent.OnClientEvent:Connect(function(success, message, data)
+        game.StarterGui:SetCore("SendNotification", {
+            Title = success and "Sukses" or "Gagal",
+            Text = message,
+            Duration = 3
+        })
+        
+        if success and data then
+            if data.type == "Reset" then
+                currentSelectedAnims = {}
+            elseif data.type == "Bundle" then
+                currentSelectedAnims = { ["Bandle"] = tostring(data.id) }
+            elseif data.type == "SingleBundle" then
+                currentSelectedAnims[data.category] = tostring(data.id)
+            elseif data.type == "UnequipSingle" then
+                currentSelectedAnims[data.category] = nil
+            end
+            
+            if AnimScrollingFrame then
+                for _, btn in ipairs(AnimScrollingFrame:GetChildren()) do
+                    if btn:IsA("TextButton") and btn.Name == "AnimItem" then
+                        local attr = btn:GetAttribute("AnimId")
+                        if attr and tostring(attr) == currentSelectedAnims[currentAnimCategory] then
+                            btn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                        else
+                            btn.BackgroundColor3 = defaultAnimBtnColor
+                        end
+                    end
+                end
+            end
+        end
+    end)
+    
     -- Setup ImageLabels
     setupImageLabels()
     
-    -- Connect AvatarButton (toggle)
-    AvatarButton.MouseButton1Click:Connect(function()
+    -- Connect AvatarButton (toggle in topbar)
+    AvatarButtonToggle.MouseButton1Click:Connect(function()
         if isPanelOpen then
             closePanel()
         else
@@ -326,17 +616,63 @@ local function initializeSystem()
         end
     end)
     
-    -- Connect SearchButton
+    -- Connect Tab Buttons
+    if MenuAvatarButton then
+        MenuAvatarButton.MouseButton1Click:Connect(function()
+            switchTab("Avatar")
+        end)
+    end
+    if MenuAnimationButton then
+        MenuAnimationButton.MouseButton1Click:Connect(function()
+            switchTab("Animation")
+        end)
+    end
+    
+    -- Connect Animation Category Buttons
+    if AnimButtonFrame then
+        local categories = {"Bandle", "Climb", "Fall", "Idle", "Jump", "Run", "Swim", "Walk"}
+        for _, cat in ipairs(categories) do
+            local btn = AnimButtonFrame:FindFirstChild(cat .. "Button")
+            if btn then
+                btn.MouseButton1Click:Connect(function()
+                    loadAnimationList(cat)
+                end)
+            end
+        end
+    end
+    
+    -- Connect SearchButtons
     if SearchButton then
         SearchButton.MouseButton1Click:Connect(searchUsername)
     end
+    if SearchTextBox then
+        SearchTextBox.FocusLost:Connect(function(enterPressed)
+            if enterPressed then
+                searchUsername()
+            end
+        end)
+    end
     
-    -- Connect TextBox Enter
-    SearchTextBox.FocusLost:Connect(function(enterPressed)
-        if enterPressed then
-            searchUsername()
-        end
-    end)
+    if ResetAnimationBtn then
+        ResetAnimationBtn.MouseButton1Click:Connect(function()
+            if ApplyAnimationEvent then
+                ApplyAnimationEvent:FireServer({type = "Reset"})
+            end
+        end)
+    end
+    
+    if AnimSearchButton then
+        AnimSearchButton.MouseButton1Click:Connect(function()
+            loadAnimationList(currentAnimCategory, AnimTextBox.Text)
+        end)
+    end
+    if AnimTextBox then
+        AnimTextBox.FocusLost:Connect(function(enterPressed)
+            if enterPressed then
+                loadAnimationList(currentAnimCategory, AnimTextBox.Text)
+            end
+        end)
+    end
     
     -- Connect CloseButton
     CloseButton.MouseButton1Click:Connect(closePanel)
@@ -350,7 +686,7 @@ local function initializeSystem()
     -- Auto close when other TextButtons in ListGui clicked
     if ListGui then
         for _, gui in ipairs(ListGui:GetDescendants()) do
-            if gui:IsA("TextButton") and gui ~= AvatarButton then
+            if gui:IsA("TextButton") and gui ~= AvatarButtonToggle then
                 gui.MouseButton1Click:Connect(function()
                     if isPanelOpen then
                         closePanel()
@@ -360,7 +696,7 @@ local function initializeSystem()
         end
     end
 end
- 
+
 -- ============================================
 -- MAIN EXECUTION
 -- ============================================
@@ -373,4 +709,5 @@ task.spawn(function()
         waitForElements()
     end)
 end)
+
 

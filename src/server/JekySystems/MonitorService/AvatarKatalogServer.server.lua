@@ -13,6 +13,14 @@ local ResetAvatarEvent = Instance.new("RemoteEvent")
 ResetAvatarEvent.Name = "ResetAvatarEvent"
 ResetAvatarEvent.Parent = ReplicatedStorage
 
+local ApplyAnimationEvent = Instance.new("RemoteEvent")
+ApplyAnimationEvent.Name = "ApplyAnimationEvent"
+ApplyAnimationEvent.Parent = ReplicatedStorage
+
+local AnimationNotificationEvent = Instance.new("RemoteEvent")
+AnimationNotificationEvent.Name = "AnimationNotificationEvent"
+AnimationNotificationEvent.Parent = ReplicatedStorage
+
 local RestoreTitleEvent = ReplicatedStorage:FindFirstChild("RestoreTitleEvent") or Instance.new("BindableEvent")
 RestoreTitleEvent.Name = "RestoreTitleEvent"
 RestoreTitleEvent.Parent = ReplicatedStorage
@@ -71,7 +79,10 @@ end
 -- ============================================
 local function saveOriginalAvatar(player)
     if not playerData[player.UserId] then
-        playerData[player.UserId] = {currentAvatarId = nil}
+        playerData[player.UserId] = {
+            currentAvatarId = nil,
+            customAnimations = {}
+        }
     end
 end
  
@@ -96,6 +107,13 @@ local function changeAvatar(player, targetUserId)
     end)
     
     if success and description then
+        -- apply custom animations
+        if playerData[player.UserId] and playerData[player.UserId].customAnimations then
+            for prop, val in pairs(playerData[player.UserId].customAnimations) do
+                description[prop] = val
+            end
+        end
+        
         humanoid:ApplyDescription(description)
         RestoreTitleEvent:Fire(player)
         -- forceAttachTitle di TitleGiver otomatis restore billboard
@@ -129,6 +147,12 @@ local function resetAvatar(player)
     end)
     
     if success and description then
+        if playerData[player.UserId] and playerData[player.UserId].customAnimations then
+            for prop, val in pairs(playerData[player.UserId].customAnimations) do
+                description[prop] = val
+            end
+        end
+        
         humanoid:ApplyDescription(description)
         RestoreTitleEvent:Fire(player)
         -- forceAttachTitle di TitleGiver otomatis restore billboard
@@ -139,17 +163,183 @@ local function resetAvatar(player)
 end
  
 -- ============================================
+-- CHANGE ANIMATION (HUMANOID DESCRIPTION)
+-- ============================================
+local function changeAnimation(player, data)
+    if not player.Character then return end
+    local humanoid = player.Character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    local currentDesc = humanoid:GetAppliedDescription()
+    if not currentDesc then return end
+
+    local changed = false
+
+    if not playerData[player.UserId] then saveOriginalAvatar(player) end
+
+    if (data.type == "Bundle" or data.type == "SingleBundle") and data.id then
+        local bundleId = tonumber(data.id)
+        local AssetService = game:GetService("AssetService")
+        local success, bundleDetails = pcall(function()
+            return AssetService:GetBundleDetailsAsync(bundleId)
+        end)
+        
+        if success and bundleDetails and bundleDetails.Items then
+            local outfitId
+            for _, item in ipairs(bundleDetails.Items) do
+                if item.Type == "UserOutfit" then
+                    outfitId = item.Id
+                    break
+                end
+            end
+            
+            if outfitId then
+                local successOutfit, outfitDesc = pcall(function()
+                    return Players:GetHumanoidDescriptionFromOutfitId(outfitId)
+                end)
+                if successOutfit and outfitDesc then
+                    if data.type == "Bundle" then
+                        currentDesc.ClimbAnimation = outfitDesc.ClimbAnimation
+                        currentDesc.FallAnimation = outfitDesc.FallAnimation
+                        currentDesc.IdleAnimation = outfitDesc.IdleAnimation
+                        currentDesc.JumpAnimation = outfitDesc.JumpAnimation
+                        currentDesc.RunAnimation = outfitDesc.RunAnimation
+                        currentDesc.SwimAnimation = outfitDesc.SwimAnimation
+                        currentDesc.WalkAnimation = outfitDesc.WalkAnimation
+                        
+                        playerData[player.UserId].customAnimations = {
+                            ClimbAnimation = outfitDesc.ClimbAnimation,
+                            FallAnimation = outfitDesc.FallAnimation,
+                            IdleAnimation = outfitDesc.IdleAnimation,
+                            JumpAnimation = outfitDesc.JumpAnimation,
+                            RunAnimation = outfitDesc.RunAnimation,
+                            SwimAnimation = outfitDesc.SwimAnimation,
+                            WalkAnimation = outfitDesc.WalkAnimation
+                        }
+                        changed = true
+                    elseif data.type == "SingleBundle" and data.category then
+                        local propName = data.category .. "Animation"
+                        currentDesc[propName] = outfitDesc[propName]
+                        
+                        if not playerData[player.UserId].customAnimations then
+                            playerData[player.UserId].customAnimations = {}
+                        end
+                        playerData[player.UserId].customAnimations[propName] = outfitDesc[propName]
+                        changed = true
+                    end
+                end
+            end
+        end
+    elseif data.type == "Single" and data.category and data.id then
+        local idStr = string.match(data.id, "%d+")
+        if idStr then
+            local animId = tonumber(idStr)
+            local propName = data.category .. "Animation"
+            currentDesc[propName] = animId
+            
+            if not playerData[player.UserId].customAnimations then
+                playerData[player.UserId].customAnimations = {}
+            end
+            playerData[player.UserId].customAnimations[propName] = animId
+            changed = true
+        end
+    elseif data.type == "UnequipSingle" and data.category then
+        local propName = data.category .. "Animation"
+        
+        local baseId = (playerData[player.UserId] and playerData[player.UserId].currentAvatarId) or player.UserId
+        local success, baseDesc = pcall(function()
+            return Players:GetHumanoidDescriptionFromUserId(baseId)
+        end)
+        
+        if success and baseDesc then
+            currentDesc[propName] = baseDesc[propName]
+            
+            if playerData[player.UserId].customAnimations then
+                playerData[player.UserId].customAnimations[propName] = nil
+            end
+            changed = true
+        end
+    elseif data.type == "Reset" then
+        playerData[player.UserId].customAnimations = {}
+        
+        local baseId = (playerData[player.UserId] and playerData[player.UserId].currentAvatarId) or player.UserId
+        local success, baseDesc = pcall(function()
+            return Players:GetHumanoidDescriptionFromUserId(baseId)
+        end)
+        
+        if success and baseDesc then
+            currentDesc.ClimbAnimation = baseDesc.ClimbAnimation
+            currentDesc.FallAnimation = baseDesc.FallAnimation
+            currentDesc.IdleAnimation = baseDesc.IdleAnimation
+            currentDesc.JumpAnimation = baseDesc.JumpAnimation
+            currentDesc.RunAnimation = baseDesc.RunAnimation
+            currentDesc.SwimAnimation = baseDesc.SwimAnimation
+            currentDesc.WalkAnimation = baseDesc.WalkAnimation
+            changed = true
+        end
+    end
+
+    if changed then
+        local equippedTool = unequipTools(player)
+        
+        local success, err = pcall(function()
+            humanoid:ApplyDescription(currentDesc)
+        end)
+        
+        if success then
+            RestoreTitleEvent:Fire(player)
+            task.spawn(function()
+                reequipTool(player, equippedTool)
+            end)
+            AnimationNotificationEvent:FireClient(player, true, "Berhasil " .. (data.type == "Reset" and "mereset" or "memasang") .. " animasi!", data)
+        else
+            warn("Failed to apply animation description: " .. tostring(err))
+            task.spawn(function()
+                reequipTool(player, equippedTool)
+            end)
+            AnimationNotificationEvent:FireClient(player, false, "Gagal memasang animasi.", data)
+        end
+    else
+        AnimationNotificationEvent:FireClient(player, false, "Gagal mendapatkan data animasi.", data)
+    end
+end
+ 
+-- ============================================
 -- PLAYER JOINED
 -- ============================================
 Players.PlayerAdded:Connect(function(player)
     saveOriginalAvatar(player)
     
     player.CharacterAdded:Connect(function(character)
-        if playerData[player.UserId] and playerData[player.UserId].currentAvatarId then
-            local humanoid = character:WaitForChild("Humanoid", 5)
-            if humanoid then
-                task.wait(1)
-                changeAvatar(player, playerData[player.UserId].currentAvatarId)
+        local humanoid = character:WaitForChild("Humanoid", 5)
+        if humanoid then
+            task.wait(1)
+            
+            local currentAvatarId = playerData[player.UserId] and playerData[player.UserId].currentAvatarId
+            local hasCustomAnims = playerData[player.UserId] and playerData[player.UserId].customAnimations and next(playerData[player.UserId].customAnimations)
+            
+            if currentAvatarId or hasCustomAnims then
+                local baseId = currentAvatarId or player.UserId
+                local success, desc = pcall(function()
+                    return Players:GetHumanoidDescriptionFromUserId(baseId)
+                end)
+                
+                if success and desc then
+                    if hasCustomAnims then
+                        for prop, val in pairs(playerData[player.UserId].customAnimations) do
+                            desc[prop] = val
+                        end
+                    end
+                    
+                    local equippedTool = unequipTools(player)
+                    pcall(function()
+                        humanoid:ApplyDescription(desc)
+                    end)
+                    RestoreTitleEvent:Fire(player)
+                    task.spawn(function()
+                        reequipTool(player, equippedTool)
+                    end)
+                end
             end
         end
     end)
@@ -179,11 +369,24 @@ ResetAvatarEvent.OnServerEvent:Connect(function(player)
 
     resetAvatar(player)
 end)
+
+ApplyAnimationEvent.OnServerEvent:Connect(function(player, data)
+    local now = os.clock()
+    if avatarCooldowns[player.UserId] and (now - avatarCooldowns[player.UserId]) < COOLDOWN_TIME then
+        return
+    end
+    avatarCooldowns[player.UserId] = now
+
+    if typeof(data) == "table" then
+        changeAnimation(player, data)
+    end
+end)
  
 -- ============================================
 -- CLEANUP
 -- ============================================
 Players.PlayerRemoving:Connect(function(player)
     playerData[player.UserId] = nil
+    avatarCooldowns[player.UserId] = nil
 end)
 

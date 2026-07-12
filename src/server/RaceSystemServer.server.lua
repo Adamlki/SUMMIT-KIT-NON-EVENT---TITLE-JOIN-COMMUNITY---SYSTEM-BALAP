@@ -62,10 +62,10 @@ local RaceStateUpdate = getOrCreateRemote("RaceStateUpdate")
 local RacePositionsUpdate = getOrCreateRemote("RacePositionsUpdate")
 local RaceAdminNotif = getOrCreateRemote("RaceAdminNotif")
 
--- Race State
 local raceState = "NotStarted"
 local selectedSummit = nil
 local selectedMode = nil -- "Admin" or "Player"
+local globalTrackEnabled = false
 local raceStartTime = 0
 local playerFinishTimes = {} -- [UserId] = time (number)
 
@@ -103,6 +103,30 @@ end
 
 -- Ensure barrier starts disabled (hidden when race is off)
 setBarrierEnabled(false)
+
+-- Helper to get Checkpoint Position (Optimized dengan Caching)
+local checkpointCache = {}
+
+local function getCheckpointPosition(cpName)
+    if checkpointCache[cpName] then return checkpointCache[cpName] end
+
+    local jeky = Workspace:FindFirstChild("AllPartSummitkitJeky")
+    if not jeky then return nil end
+    local cpFolder = jeky:FindFirstChild("Checkpoint")
+    if not cpFolder then return nil end
+    
+    local internalToModel = { Summit = "SUMMIT", ApexSummit = "BIGSUMMIT" }
+    local modelName = internalToModel[cpName] or cpName
+    local model = cpFolder:FindFirstChild(modelName)
+    if model then
+        local sp = model:FindFirstChildOfClass("SpawnLocation")
+        if sp then 
+            checkpointCache[cpName] = sp.Position
+            return sp.Position 
+        end
+    end
+    return nil
+end
 
 -- Helper for CP parsing
 local function getCPSortValue(cpString)
@@ -214,7 +238,12 @@ RaceAction.OnServerEvent:Connect(function(player, actionData)
         RacePositionsUpdate:FireAllClients({})
         
     elseif action == "SetTrack" then
+        globalTrackEnabled = actionData.state
         actionText = role .. " " .. player.DisplayName .. " set Tracking " .. (actionData.state and "ON" or "OFF")
+        RaceStateUpdate:FireAllClients({
+            type = "TrackUpdate",
+            trackEnabled = globalTrackEnabled
+        })
     end
     
     if actionText ~= "" then
@@ -267,18 +296,37 @@ task.spawn(function()
                     end
                 end
                 
+                -- Calculate distance to next checkpoint for real-time ranking
+                local distanceToNext = math.huge
+                if not isFinished and player.Character then
+                    local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        local nextCPName = "CP" .. (sortVal + 1)
+                        local nextCPPos = getCheckpointPosition(nextCPName)
+                        if not nextCPPos then
+                            -- If next CP doesn't exist, target is the summit
+                            nextCPPos = getCheckpointPosition(selectedSummit)
+                        end
+                        
+                        if nextCPPos then
+                            distanceToNext = (hrp.Position - nextCPPos).Magnitude
+                        end
+                    end
+                end
+                
                 table.insert(playersData, {
                     player = player,
                     name = player.DisplayName, -- nickname
                     cp = cp,
                     sortVal = sortVal,
+                    distanceToNext = distanceToNext,
                     time = timeTaken,
                     isFinished = isFinished
                 })
             end
             
             -- Sort players
-            -- Priority: 1. Finished (sorted by time ascending), 2. Not finished (sorted by CP descending)
+            -- Priority: 1. Finished (sorted by time ascending), 2. Not finished (sorted by CP descending & distance ascending)
             table.sort(playersData, function(a, b)
                 if a.isFinished and b.isFinished then
                     return a.time < b.time
@@ -287,7 +335,12 @@ task.spawn(function()
                 elseif b.isFinished then
                     return false
                 else
-                    return a.sortVal > b.sortVal
+                    if a.sortVal == b.sortVal then
+                        -- Jika di Checkpoint yang sama, yang lebih dekat ke next CP lebih unggul
+                        return a.distanceToNext < b.distanceToNext
+                    else
+                        return a.sortVal > b.sortVal
+                    end
                 end
             end)
             
@@ -305,7 +358,10 @@ task.spawn(function()
             end
             
             -- Send to all clients
-            RacePositionsUpdate:FireAllClients(finalData)
+            RacePositionsUpdate:FireAllClients({
+                positions = finalData,
+                trackEnabled = globalTrackEnabled
+            })
         end
     end
 end)

@@ -108,6 +108,7 @@ end
  
 local function toggleHideTitle(hide)
     hideTitle = hide
+    _G.isHideTitle = hide
     if _G.OverheadTitleAPI and _G.OverheadTitleAPI.setHideTitle then
         _G.OverheadTitleAPI.setHideTitle(hide)
     end
